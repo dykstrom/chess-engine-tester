@@ -20,8 +20,8 @@ import java.io.File;
 
 public final class TestConfig {
 
-    public static final File ENGINE_1_CONFIG_FILE = new File("../module-cli/src/test/resources/gnuchess.json");
-    public static final File ENGINE_2_CONFIG_FILE = new File("../module-cli/src/test/resources/ronja-0.8.2.json");
+    public static final File ENGINE_1_CONFIG_FILE = new File("../cli/src/test/resources/gnuchess.json");
+    public static final File ENGINE_2_CONFIG_FILE = new File("../cli/src/test/resources/ronja-0.8.2.json");
 
     private TestConfig() { }
 }
