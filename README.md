@@ -2,12 +2,12 @@
 
 <div style="text-align: left">
 
-[![Build Status](https://travis-ci.com/dykstrom/chess-engine-tester.svg?branch=master)](https://travis-ci.com/dykstrom/chess-engine-tester)
-![GitHub issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/dykstrom/chess-engine-tester)
-![GitHub all releases](https://img.shields.io/github/downloads/dykstrom/chess-engine-tester/total)
-![GitHub](https://img.shields.io/github/license/dykstrom/chess-engine-tester)
-![GitHub top language](https://img.shields.io/github/languages/top/dykstrom/chess-engine-tester)
+[![Build Status](https://github.com/dykstrom/chess-engine-tester/actions/workflows/maven.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/maven.yml)
+![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)
+![Latest Release](https://img.shields.io/github/v/release/dykstrom/chess-engine-tester)
+![Downloads](https://img.shields.io/github/downloads/dykstrom/chess-engine-tester/total)
+![License](https://img.shields.io/github/license/dykstrom/chess-engine-tester)
+![Top Language](https://img.shields.io/github/languages/top/dykstrom/chess-engine-tester)
 [![JDK compatibility: 17+](https://img.shields.io/badge/JDK_compatibility-17+-blue.svg)](https://adoptium.net)
 
 </div>
