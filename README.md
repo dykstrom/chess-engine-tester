@@ -3,8 +3,8 @@
 <div style="text-align: left">
 
 [![Build Status](https://github.com/dykstrom/chess-engine-tester/actions/workflows/maven.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/maven.yml)
-![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)
-![Latest Release](https://img.shields.io/github/v/release/dykstrom/chess-engine-tester)
+[![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)](https://github.com/dykstrom/chess-engine-tester/issues)
+[![Latest Release](https://img.shields.io/github/v/release/dykstrom/chess-engine-tester?display_name=release)](https://github.com/dykstrom/chess-engine-tester/releases)
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/chess-engine-tester/total)
 ![License](https://img.shields.io/github/license/dykstrom/chess-engine-tester)
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/chess-engine-tester)
