@@ -20,17 +20,19 @@ import java.io.File;
 
 public final class TestConfig {
 
-    public static final File ENGINE_1_DIRECTORY = new File("../engines/ronja-0.8.2");
-    public static final String ENGINE_1_COMMAND_WINDOWS = "./ronja.bat";
-    public static final String ENGINE_1_COMMAND_LINUX = "./ronja.sh";
+    private static final File TEMP_DIRECTORY = new File(System.getProperty("java.io.tmpdir"));
 
-    public static final File ENGINE_2_DIRECTORY = new File("/tmp");
+    public static final File ENGINE_1_DIRECTORY = TEMP_DIRECTORY;
+    public static final String ENGINE_1_COMMAND_WINDOWS = "gnuchess -x";
+    public static final String ENGINE_1_COMMAND_LINUX = "gnuchess -x";
+
+    public static final File ENGINE_2_DIRECTORY = TEMP_DIRECTORY;
     public static final String ENGINE_2_COMMAND_WINDOWS = "gnuchess -x";
     public static final String ENGINE_2_COMMAND_LINUX = "gnuchess -x";
 
-    public static final File ENGINE_3_DIRECTORY = new File("/tmp");
-    public static final String ENGINE_3_COMMAND_WINDOWS = "gnuchess -x";
-    public static final String ENGINE_3_COMMAND_LINUX = "gnuchess -x";
+    public static final File ENGINE_3_DIRECTORY = new File("../engines/ronja-0.9.0");
+    public static final String ENGINE_3_COMMAND_WINDOWS = "./ronja.bat";
+    public static final String ENGINE_3_COMMAND_LINUX = "./ronja";
 
     private TestConfig() { }
 }

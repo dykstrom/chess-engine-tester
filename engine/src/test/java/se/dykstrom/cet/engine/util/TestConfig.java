@@ -20,10 +20,10 @@ import java.io.File;
 
 public final class TestConfig {
 
-    public static final File ENGINE_1_DIRECTORY = new File("../engines/ronja-0.8.2");
+    public static final File ENGINE_1_DIRECTORY = new File("../engines/ronja-0.9.0");
     public static final String ENGINE_1_COMMAND_WINDOWS = "./ronja.bat";
-    public static final String ENGINE_1_COMMAND_LINUX = "./ronja.sh";
-    public static final String ENGINE_1_NAME = "Ronja 0.8.2";
+    public static final String ENGINE_1_COMMAND_LINUX = "./ronja";
+    public static final String ENGINE_1_NAME = "Ronja 0.9.0";
 
     public static final String ENGINE_2_NAME = "Some Engine";
 

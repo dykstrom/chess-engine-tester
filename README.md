@@ -163,13 +163,13 @@ $ mvn clean package -DskipTests
 To run the integration tests you need to install some dependencies.
 
 * [GNU Chess](https://www.gnu.org/software/chess) must be installed and added to your path.
-* [Ronja 0.8.2](https://github.com/dykstrom/ronja/releases/tag/ronja-0.8.2) must be installed
+* [Ronja 0.9.0](https://github.com/dykstrom/ronja/releases/tag/ronja-0.9.0) must be installed
   in a subdirectory called _engines_. The directory structure should look like below.
 
 ```
 chess-engine-tester/
 └─ engines/
-   └─ ronja-0.8.2/
+   └─ ronja-0.9.0/
 ```
 
 With the dependencies installed, you run the integration tests like:

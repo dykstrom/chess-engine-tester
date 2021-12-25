@@ -10,6 +10,7 @@ buildNumber.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
 
+# IntelliJ
 *.iml
 .idea/
 .run
@@ -19,3 +20,10 @@ buildNumber.properties
 engines/
 *.pgn
 *.json
+!gnuchess.json
+!ronja-0.9.0.json
+
+# GNU Chess
+players.dat
+game.*
+log.*
