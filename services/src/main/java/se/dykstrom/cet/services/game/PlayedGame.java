@@ -16,6 +16,8 @@
 
 package se.dykstrom.cet.services.game;
 
+import java.util.Map;
+
 import com.github.bhlangonijr.chesslib.game.GameResult;
 import com.github.bhlangonijr.chesslib.move.MoveList;
 import se.dykstrom.cet.engine.config.GameConfig;
@@ -26,5 +28,6 @@ public record PlayedGame(GameConfig gameConfig,
                          IdlingEngine idlingBlackEngine,
                          GameResult result,
                          String reason,
-                         MoveList moves) {
+                         MoveList moves,
+                         Map<Integer, String> extraMoves) {
 }

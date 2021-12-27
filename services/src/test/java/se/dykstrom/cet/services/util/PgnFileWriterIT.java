@@ -29,6 +29,8 @@ import se.dykstrom.cet.engine.config.GameConfig;
 import se.dykstrom.cet.engine.time.ClassicTimeControl;
 import se.dykstrom.cet.engine.time.TimeControl;
 import se.dykstrom.cet.services.game.PlayedGame;
+import se.dykstrom.cet.services.io.FileService;
+import se.dykstrom.cet.services.io.FileServiceImpl;
 
 import static com.github.bhlangonijr.chesslib.Side.BLACK;
 import static com.github.bhlangonijr.chesslib.Side.WHITE;
@@ -40,6 +42,7 @@ class PgnFileWriterIT {
 
     private static final TimeControl TIME_CONTROL = new ClassicTimeControl(40, 0, 30);
     private static final GameConfig GAME_CONFIG = new GameConfig("w", "b", TIME_CONTROL);
+    private static final FileService FILE_SERVICE = new FileServiceImpl();
 
     private PlayedGame playedGame;
 
@@ -57,8 +60,8 @@ class PgnFileWriterIT {
                 null,
                 BLACK_WON,
                 "Checkmate",
-                moves
-        );
+                moves,
+                null);
     }
 
     @Test
@@ -67,10 +70,10 @@ class PgnFileWriterIT {
         final Path path = Files.createTempFile(null, null);
         final File file = path.toFile();
         file.deleteOnExit();
-        PgnFileWriter listener = new PgnFileWriter(file);
+        PgnFileWriter writer = new PgnFileWriter(file, FILE_SERVICE);
 
         // When
-        listener.gameOver(1, LocalDateTime.now(), playedGame);
+        writer.gameOver(1, LocalDateTime.now(), playedGame);
 
         // Then
         assertTrue(file.exists());

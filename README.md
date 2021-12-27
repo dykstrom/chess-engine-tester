@@ -109,12 +109,14 @@ start in the current directory. Below is an example file for GNU Chess.
 An interesting feature of chess-engine-tester is that you can let three chess engines 
 participate in a game. When you start a game with three engines, the third engine will shadow 
 the engine playing black. It will be fed the same moves as the black engine, but its counter 
-moves will not actually be played. Instead, they will be logged for later inspection. The 
-three engines run in parallel in different processes.
+moves will not actually be played. Instead, they will be logged for later inspection. If the
+move of the third engine differs from what the black engine played, the alternative move will
+also be included as a comment in the PGN file. The three engines run in parallel in different 
+processes.
 
 This feature can be used to compare two engines, or different versions of the same engine.
 All moves are logged with timestamps, so it is easy to compare what moves are generated and
-when.
+when by inspecting the log file.
 
 The third chess engine must support some additional XBoard commands besides those that are
 required for basic play. The required commands are _remove_ that is used to retract a move,
@@ -130,6 +132,12 @@ Below is an example of what the log file could look like when playing with three
 2021-11-01 17:21:59.746 FINE    [se.dykstrom.cet.services.game.GameServiceImpl logMove] EXTRA -> 1... g8f6
 2021-11-01 17:21:59.747 INFO    [se.dykstrom.cet.services.game.GameServiceImpl compare] Black engine returned move e7e6 but extra engine returned move g8f6
 2021-11-01 17:21:59.955 FINE    [se.dykstrom.cet.services.game.GameServiceImpl logMove] WHITE <- 1... e7e6
+```
+
+The beginning of the move text part of the PGN file could look like below.
+
+```
+1. d4 e6 {1... Nf6}
 ```
 
 

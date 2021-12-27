@@ -168,7 +168,7 @@ public class App implements Callable<Integer> {
             spec.commandLine().getOut().println("Saving games to " + outputFile);
         }
         matchService.addGameListener(new ProgressBarWriter(numberOfGames));
-        matchService.addGameListener(new PgnFileWriter(outputFile));
+        matchService.addGameListener(new PgnFileWriter(outputFile, fileService));
         final PlayedMatch playedMatch;
         if (numberOfGames == 1) {
             if (engine3File != null) {

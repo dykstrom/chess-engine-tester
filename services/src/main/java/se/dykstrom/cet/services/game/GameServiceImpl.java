@@ -16,6 +16,9 @@
 
 package se.dykstrom.cet.services.game;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.github.bhlangonijr.chesslib.Board;
@@ -147,8 +150,8 @@ public class GameServiceImpl implements GameService {
                 finalIdlingBlackEngine,
                 GameResult.fromNotation(finalResult.code()),
                 finalResult.text(),
-                moves
-        );
+                moves,
+                null);
     }
 
     @Override
@@ -168,6 +171,7 @@ public class GameServiceImpl implements GameService {
         // Game state
         final var board = new Board();
         final var moves = new MoveList();
+        final var extraMoves = new HashMap<Integer, String>();
 
         // Engine states
         final ForcedEngine forcedWhiteEngine = idlingWhiteEngine.start(gameConfig);
@@ -217,7 +221,7 @@ public class GameServiceImpl implements GameService {
             // Extra engine
             var extraMove = activeExtraEngine.readMove();
             logMove(EXTRA_ENGINE, extraMove, board);
-            compare(blackMove, extraMove);
+            compare(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
             activeExtraEngine = takeExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
             // Black engine
             updateGameState(blackMove, board, moves);
@@ -246,7 +250,7 @@ public class GameServiceImpl implements GameService {
                 // Extra engine
                 extraMove = activeExtraEngine.readMove();
                 logMove(EXTRA_ENGINE, extraMove, board);
-                compare(blackMove, extraMove);
+                compare(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
                 activeExtraEngine = takeExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
                 // Black engine
                 updateGameState(blackMove, board, moves);
@@ -279,8 +283,8 @@ public class GameServiceImpl implements GameService {
                 finalIdlingBlackEngine,
                 GameResult.fromNotation(finalResult.code()),
                 finalResult.text(),
-                moves
-        );
+                moves,
+                extraMoves);
     }
 
     private ActiveEngine takeExtraMoveAndForceBlackMove(final ActiveEngine activeExtraEngine,
@@ -300,17 +304,32 @@ public class GameServiceImpl implements GameService {
 
     /**
      * Compares the move made by the extra engine to the move made by the black engine,
-     * and logs any differences.
+     * and logs any differences. Returns {@code extraMove} if the moves differ. Otherwise,
+     * returns an empty optional.
      */
-    private void compare(final String blackMove, final String extraMove) {
+    private Optional<String> compare(final String blackMove, final String extraMove) {
         if (!extraMove.equals(blackMove)) {
             LOGGER.log(INFO, "Black engine returned move {0} but extra engine returned move {1}", blackMove, extraMove);
+            return Optional.of(extraMove);
+        } else {
+            return Optional.empty();
         }
     }
 
     @Override
     public void stopGame() {
         playing.set(false);
+    }
+
+    private void updateExtraMoves(final String canMove,
+                                  final Board board,
+                                  final MoveList moves,
+                                  final Map<Integer, String> extraMoves) {
+        // Convert move to SAN using the move list
+        moves.add(new Move(canMove, board.getSideToMove()));
+        final var array = moves.toSanArray();
+        moves.removeLast();
+        extraMoves.put(board.getMoveCounter(), array[array.length - 1]);
     }
 
     private void updateGameState(final String canMove, final Board board, final MoveList moves) {

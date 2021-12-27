@@ -106,6 +106,7 @@ class GameServiceImplIT {
             System.out.println("Game result: " + playedGame.result());
             assertEquals(gameConfig, playedGame.gameConfig());
             assertNotNull(playedGame.result());
+            assertNotNull(playedGame.extraMoves());
         } finally {
             unloadEngine(whiteEngine);
             unloadEngine(blackEngine);

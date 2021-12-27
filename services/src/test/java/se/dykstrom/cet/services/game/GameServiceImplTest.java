@@ -34,6 +34,7 @@ import static com.github.bhlangonijr.chesslib.game.GameResult.BLACK_WON;
 import static com.github.bhlangonijr.chesslib.game.GameResult.DRAW;
 import static com.github.bhlangonijr.chesslib.game.GameResult.WHITE_WON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -176,7 +177,7 @@ class GameServiceImplTest {
         final var reason = "Black mates";
         when(activeWhiteEngine.readMove()).thenReturn("f2f3");
         when(activeBlackEngine.readMove()).thenReturn("e7e5");
-        when(activeExtraEngine.readMove()).thenReturn("a7a5");
+        when(activeExtraEngine.readMove()).thenReturn("a7a5", "d8h4");
         when(activeWhiteEngine.makeAndReadMove("e7e5")).thenReturn("g2g4");
         when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("d8h4");
         when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", reason)));
@@ -190,5 +191,7 @@ class GameServiceImplTest {
         assertEquals(BLACK_WON, playedGame.result());
         assertEquals(reason, playedGame.reason());
         assertEquals("f3 e5 g4 Qh4#", playedGame.moves().toSan().strip());
+        assertEquals("a5", playedGame.extraMoves().get(1));
+        assertNull(playedGame.extraMoves().get(2));
     }
 }

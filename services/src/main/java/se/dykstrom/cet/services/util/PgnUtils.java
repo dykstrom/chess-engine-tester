@@ -18,20 +18,32 @@ package se.dykstrom.cet.services.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class PgnUtils {
 
     private PgnUtils() { }
 
-    public static List<String> formatMoveText(final String[] moves) {
+    public static List<String> formatMoveText(final String[] moves,
+                                              final Map<Integer, String> extraMoves) {
         final var lines = new ArrayList<String>();
         final var builder = new StringBuilder();
 
         for (var index = 0; index < moves.length; index += 2) {
-            builder.append(index / 2 + 1).append(". ");
-            builder.append(moves[index]).append(" ");
+            final var moveNumber = index / 2 + 1;
+
+            // White move
+            builder.append(moveNumber).append(". ").append(moves[index]).append(" ");
+
+            // Black move
             if (index + 1 < moves.length) {
                 builder.append(moves[index + 1]).append(" ");
+            }
+
+            // Possible extra move
+            if (extraMoves != null && extraMoves.containsKey(moveNumber)) {
+                final var extraMove = extraMoves.get(moveNumber);
+                builder.append("{").append(moveNumber).append("... ").append(extraMove).append("} ");
             }
 
             if (builder.length() > 60) {

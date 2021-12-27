@@ -18,8 +18,13 @@ package se.dykstrom.cet.services.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
 
 public interface FileService {
+
+    Path write(Path path, Iterable<? extends CharSequence> lines, Charset cs, OpenOption... options) throws IOException;
 
     EngineConfigDto load(final File file) throws IOException;
 

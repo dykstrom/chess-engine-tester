@@ -50,9 +50,9 @@ class MatchServiceImplTest {
     private final IdlingEngine engine2Mock = mock(IdlingEngine.class);
     private final IdlingEngine engine3Mock = mock(IdlingEngine.class);
     private final PlayedGame gamePlayedWithEngine1AsWhite =
-            new PlayedGame(GAME_CONFIG_ENGINE_1_IS_WHITE, engine1Mock, engine2Mock, WHITE_WON, "Checkmate", new MoveList());
+            new PlayedGame(GAME_CONFIG_ENGINE_1_IS_WHITE, engine1Mock, engine2Mock, WHITE_WON, "Checkmate", new MoveList(), null);
     private final PlayedGame gamePlayedWithEngine1AsBlack =
-            new PlayedGame(GAME_CONFIG_ENGINE_1_IS_WHITE, engine2Mock, engine1Mock, DRAW, "Stalemate", new MoveList());
+            new PlayedGame(GAME_CONFIG_ENGINE_1_IS_WHITE, engine2Mock, engine1Mock, DRAW, "Stalemate", new MoveList(), null);
 
     private final MatchService matchService = new MatchServiceImpl(gameServiceMock);
 

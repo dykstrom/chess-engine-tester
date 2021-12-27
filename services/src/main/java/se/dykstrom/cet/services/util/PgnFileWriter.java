@@ -20,13 +20,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 import se.dykstrom.cet.services.game.PlayedGame;
+import se.dykstrom.cet.services.io.FileService;
 
 import static java.lang.System.Logger.Level.ERROR;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -35,7 +35,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static se.dykstrom.cet.services.util.PgnUtils.tag;
 
-public record PgnFileWriter(File outputFile) implements GameListener {
+public record PgnFileWriter(File outputFile, FileService fileService) implements GameListener {
 
     private static final System.Logger LOGGER = System.getLogger(PgnFileWriter.class.getName());
 
@@ -60,12 +60,12 @@ public record PgnFileWriter(File outputFile) implements GameListener {
             lines.add(tag("TimeControl", game.gameConfig().timeControl().toPgn()));
             lines.add("");
 
-            lines.addAll(PgnUtils.formatMoveText(game.moves().toSanArray()));
+            lines.addAll(PgnUtils.formatMoveText(game.moves().toSanArray(), game.extraMoves()));
             lines.add(game.result().getDescription() + " {" + game.reason() + "}");
             lines.add("");
 
             try {
-                Files.write(outputFile.toPath(), lines, UTF_8, CREATE, WRITE, APPEND);
+                fileService.write(outputFile.toPath(), lines, UTF_8, CREATE, WRITE, APPEND);
             } catch (IOException e) {
                 LOGGER.log(ERROR, "Cannot write game to output file ''{0}'': {1}", outputFile, e.getMessage());
             }

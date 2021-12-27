@@ -18,12 +18,24 @@ package se.dykstrom.cet.services.io;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class FileServiceImpl implements FileService {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    @Override
+    public Path write(final Path path,
+                      final Iterable<? extends CharSequence> lines,
+                      final Charset cs,
+                      final OpenOption... options) throws IOException {
+        return Files.write(path, lines, cs, options);
+    }
 
     @Override
     public EngineConfigDto load(final File file) throws IOException {
