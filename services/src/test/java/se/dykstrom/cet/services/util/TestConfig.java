@@ -31,7 +31,7 @@ public final class TestConfig {
     public static final String ENGINE_2_COMMAND_LINUX = "gnuchess -x";
 
     public static final File ENGINE_3_DIRECTORY = new File("../engines/ronja-0.9.0");
-    public static final String ENGINE_3_COMMAND_WINDOWS = "./ronja.bat";
+    public static final String ENGINE_3_COMMAND_WINDOWS = "cmd.exe /c ronja.bat";
     public static final String ENGINE_3_COMMAND_LINUX = "./ronja";
 
     private TestConfig() { }
