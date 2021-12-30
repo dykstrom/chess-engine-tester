@@ -94,12 +94,22 @@ configuration of a third chess engine (-3), see below.
 A chess engine configuration file is a simple JSON file with two entries—the command used to 
 start the chess engine, and the directory to start in. The command may include the path to the
 chess engine executable. The directory is optional. If not specified, the chess engine will 
-start in the current directory. Below is an example file for GNU Chess.
+start in the current directory. Below is an example file for GNU Chess to use on Linux/macOS.
 
 ```json
 {
 "command" : "gnuchess -x",
 "directory" : "/tmp"
+}
+```
+
+When running chess-engine-tester on Windows, you may need to use cmd.exe to start the chess 
+engine, for example like this:
+
+```json
+{
+"command" : "cmd.exe /c ronja.bat",
+"directory" : "c:/chess/ronja-0.9.0"
 }
 ```
 
@@ -134,7 +144,15 @@ Below is an example of what the log file could look like when playing with three
 2021-11-01 17:21:59.955 FINE    [se.dykstrom.cet.services.game.GameServiceImpl logMove] WHITE <- 1... e7e6
 ```
 
-The beginning of the move text part of the PGN file could look like below.
+Note that the default log level is WARNING. To make chess-engine-tester actually log the
+moves as in the example, you need to configure the log level to FINE in file logging.properties.
+
+```properties
+se.dykstrom.cet.level=FINE
+```
+
+The beginning of the move text part of the PGN file could look like below, when the third
+chess engine reported an alternative move.
 
 ```
 1. d4 e6 {1... Nf6}
