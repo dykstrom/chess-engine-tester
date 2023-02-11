@@ -203,3 +203,16 @@ With the dependencies installed, you run the integration tests like:
 ```shell
 $ mvn clean verify
 ```
+
+
+### Running Integration Tests in Docker
+
+If you don't want to install any dependencies locally, you can also run the integration tests
+in [Docker](https://www.docker.com). Note that [Docker BuildKit](https://docs.docker.com/build/buildkit) 
+must be enabled for this to work.
+
+With Docker installed and BuildKit enabled, you run the integration tests like:
+
+```shell
+$ docker build .
+```
