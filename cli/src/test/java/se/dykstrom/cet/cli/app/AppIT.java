@@ -16,7 +16,7 @@
 
 package se.dykstrom.cet.cli.app;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static se.dykstrom.cet.cli.util.TestConfig.ENGINE_1_CONFIG_FILE;
 import static se.dykstrom.cet.cli.util.TestConfig.ENGINE_2_CONFIG_FILE;
 
-@Disabled
+@Tag("slow")
 class AppIT {
 
     @Test

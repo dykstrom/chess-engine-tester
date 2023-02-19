@@ -19,7 +19,7 @@ package se.dykstrom.cet.services.game;
 import java.io.File;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -33,17 +33,17 @@ import se.dykstrom.cet.engine.util.EngineProcessImpl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_COMMAND_LINUX;
-import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_COMMAND_WINDOWS;
-import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_DIRECTORY;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_1_COMMAND_LINUX;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_1_COMMAND_WINDOWS;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_1_DIRECTORY;
+import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_COMMAND_LINUX;
+import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_COMMAND_WINDOWS;
+import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_DIRECTORY;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_3_COMMAND_LINUX;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_3_COMMAND_WINDOWS;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_3_DIRECTORY;
 
-@Disabled
+@Tag("slow")
 class GameServiceImplIT {
 
     private static final TimeControl TIME_CONTROL = new ClassicTimeControl(40, 0, 20);

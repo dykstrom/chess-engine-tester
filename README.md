@@ -216,3 +216,5 @@ With Docker installed and BuildKit enabled, you run the integration tests like:
 ```shell
 $ docker build .
 ```
+
+Integration tests in Docker will always use Maven profile slow-tests.

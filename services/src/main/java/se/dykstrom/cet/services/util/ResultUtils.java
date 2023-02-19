@@ -32,7 +32,7 @@ public final class ResultUtils {
      * This method is called when an engine has received an illegal move or invalid command,
      * or when an engine has detected checkmate or draw, which means the move has already been made,
      * and the side to move is not the one to blame.
-     *
+     * <p>
      * Note that it is uncertain if we ever end up here, because ChessLib will have detected
      * the same problem before the move was actually made.
      */

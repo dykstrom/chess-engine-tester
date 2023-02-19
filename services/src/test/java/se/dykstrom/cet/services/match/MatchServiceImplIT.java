@@ -20,7 +20,7 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.EnabledOnOs;
@@ -39,7 +39,7 @@ import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_COMMAND_LINUX;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_COMMAND_WINDOWS;
 import static se.dykstrom.cet.services.util.TestConfig.ENGINE_2_DIRECTORY;
 
-@Disabled
+@Tag("slow")
 class MatchServiceImplIT {
 
     private static final TimeControl TIME_CONTROL = new ClassicTimeControl(40, 0, 20);

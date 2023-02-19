@@ -19,6 +19,6 @@ WORKDIR /cet
 
 COPY . /cet/
 
-RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn clean verify
+RUN --mount=type=cache,id=mvn-cache,target=/root/.m2 mvn clean verify -P slow-tests
 
 CMD bash

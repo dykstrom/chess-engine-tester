@@ -52,6 +52,7 @@ class PgnFileWriterTest {
 
     private final FileService fileServiceMock = mock(FileService.class);
     private final ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
+    @SuppressWarnings("unchecked")
     private final ArgumentCaptor<Iterable<String>> linesCaptor = ArgumentCaptor.forClass(Iterable.class);
     private final ArgumentCaptor<Charset> charsetCaptor = ArgumentCaptor.forClass(Charset.class);
 

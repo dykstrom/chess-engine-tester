@@ -16,7 +16,7 @@
 
 package se.dykstrom.cet.services.io;
 
-import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -33,7 +33,7 @@ class FileServiceImplIT {
     void shouldReadConfigFile() throws Exception {
         // Given
         final var path = Files.createTempFile(null, null);
-        final File file = path.toFile();
+        final var file = path.toFile();
         file.deleteOnExit();
         Files.write(path, List.of(
                 "{",
@@ -42,11 +42,28 @@ class FileServiceImplIT {
         ));
 
         // When
-        final boolean canRead = fileService.canRead(file);
+        final var canRead = fileService.canRead(file);
         final var dto = fileService.load(file);
 
         // Then
         assertTrue(canRead);
         assertEquals(new EngineConfigDto("foo", null), dto);
+    }
+
+    @Test
+    void shouldWriteLines() throws Exception {
+        // Given
+        final var path = Files.createTempFile(null, null);
+        final var file = path.toFile();
+        file.deleteOnExit();
+        final var lines = List.of("one", "two", "three");
+
+        // When
+        final var actualPath = fileService.write(path, lines, StandardCharsets.UTF_8);
+        final var actualLines = Files.readAllLines(path, StandardCharsets.UTF_8);
+
+        // Then
+        assertEquals(path, actualPath);
+        assertEquals(lines, actualLines);
     }
 }
