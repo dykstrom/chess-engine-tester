@@ -75,6 +75,7 @@ class PgnFileWriterTest {
                 GAME_CONFIG,
                 null,
                 null,
+                null,
                 BLACK_WON,
                 "Checkmate",
                 moves,
@@ -100,6 +101,7 @@ class PgnFileWriterTest {
         // Given
         final PlayedGame playedGame = new PlayedGame(
                 GAME_CONFIG,
+                null,
                 null,
                 null,
                 BLACK_WON,

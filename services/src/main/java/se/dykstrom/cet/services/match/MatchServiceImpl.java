@@ -25,10 +25,10 @@ import com.github.bhlangonijr.chesslib.game.GameResult;
 import se.dykstrom.cet.engine.config.GameConfig;
 import se.dykstrom.cet.engine.state.IdlingEngine;
 import se.dykstrom.cet.engine.time.TimeControl;
-import se.dykstrom.cet.services.game.PlayedGame;
-import se.dykstrom.cet.services.util.GameListener;
 import se.dykstrom.cet.services.game.GameService;
 import se.dykstrom.cet.services.game.GameServiceImpl;
+import se.dykstrom.cet.services.game.PlayedGame;
+import se.dykstrom.cet.services.util.GameListener;
 import se.dykstrom.cet.services.util.ThreadUtils;
 
 import static java.lang.System.Logger.Level.INFO;
@@ -75,8 +75,9 @@ public class MatchServiceImpl implements MatchService {
         LOGGER.log(INFO, "Final results: {0}", results);
         return new PlayedMatch(
                 new MatchConfig(1, timeControl),
-                playedGame.idlingWhiteEngine(),
-                playedGame.idlingBlackEngine(),
+                playedGame.whiteEngine(),
+                playedGame.blackEngine(),
+                null,
                 results,
                 reasons
         );
@@ -102,8 +103,9 @@ public class MatchServiceImpl implements MatchService {
         LOGGER.log(INFO, "Final results: {0}", results);
         return new PlayedMatch(
                 new MatchConfig(1, timeControl),
-                playedGame.idlingWhiteEngine(),
-                playedGame.idlingBlackEngine(),
+                playedGame.whiteEngine(),
+                playedGame.blackEngine(),
+                playedGame.extraEngine(),
                 results,
                 reasons
         );
@@ -127,10 +129,10 @@ public class MatchServiceImpl implements MatchService {
             // Odd game
             var gameConfig = new GameConfig(idlingEngine1.myName(), idlingEngine2.myName(), matchConfig.timeControl());
             var startTime = LocalDateTime.now();
-            var playedGame = gameService.playGame(gameConfig, engine1, engine2);
+            var playedGame = gameService.playGame(gameConfig, idlingEngine1, idlingEngine2);
             notifyListeners(round, startTime, playedGame);
-            idlingEngine1 = playedGame.idlingWhiteEngine();
-            idlingEngine2 = playedGame.idlingBlackEngine();
+            idlingEngine1 = restartEngineIfNeeded(playedGame.whiteEngine());
+            idlingEngine2 = restartEngineIfNeeded(playedGame.blackEngine());
             results.add(playedGame.result());
             reasons.add(playedGame.reason());
             round++;
@@ -139,10 +141,10 @@ public class MatchServiceImpl implements MatchService {
             // Even game
             gameConfig = new GameConfig(idlingEngine2.myName(), idlingEngine1.myName(), matchConfig.timeControl());
             startTime = LocalDateTime.now();
-            playedGame = gameService.playGame(gameConfig, engine2, engine1);
+            playedGame = gameService.playGame(gameConfig, idlingEngine2, idlingEngine1);
             notifyListeners(round, startTime, playedGame);
-            idlingEngine1 = playedGame.idlingBlackEngine();
-            idlingEngine2 = playedGame.idlingWhiteEngine();
+            idlingEngine1 = restartEngineIfNeeded(playedGame.blackEngine());
+            idlingEngine2 = restartEngineIfNeeded(playedGame.whiteEngine());
             results.add(playedGame.result());
             reasons.add(playedGame.reason());
             round++;
@@ -150,7 +152,19 @@ public class MatchServiceImpl implements MatchService {
         }
 
         LOGGER.log(INFO, "Final results: {0}", results);
-        return new PlayedMatch(matchConfig, idlingEngine1, idlingEngine2, results, reasons);
+        return new PlayedMatch(matchConfig, idlingEngine1, idlingEngine2, null, results, reasons);
+    }
+
+    /**
+     * Restarts the engine process if reuse is disabled in the engine features.
+     * If reuse is enabled, this method just returns the given idling engine.
+     */
+    private IdlingEngine restartEngineIfNeeded(final IdlingEngine idlingEngine) {
+        if (idlingEngine.features().reuse()) {
+            return idlingEngine;
+        }
+
+        return idlingEngine.unload().load();
     }
 
     @Override

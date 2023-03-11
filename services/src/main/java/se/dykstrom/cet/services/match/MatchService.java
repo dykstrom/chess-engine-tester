@@ -28,10 +28,10 @@ public interface MatchService {
                                     final IdlingEngine engine1,
                                     final IdlingEngine engine2);
 
-    PlayedMatch playSingleGameMatchWithExtraEngine(TimeControl timeControl,
-                                                   IdlingEngine engine1,
-                                                   IdlingEngine engine2,
-                                                   IdlingEngine engine3);
+    PlayedMatch playSingleGameMatchWithExtraEngine(final TimeControl timeControl,
+                                                   final IdlingEngine engine1,
+                                                   final IdlingEngine engine2,
+                                                   final IdlingEngine engine3);
 
     PlayedMatch playMatch(final MatchConfig matchConfig,
                           final IdlingEngine engine1,

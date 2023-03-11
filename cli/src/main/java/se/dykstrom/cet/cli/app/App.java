@@ -181,18 +181,18 @@ public class App implements Callable<Integer> {
         }
         printResult(playedMatch);
 
-        engineService.unload(engine1);
-        engineService.unload(engine2);
-        if (engine3 != null) {
-            engineService.unload(engine3);
+        engineService.unload(playedMatch.engine1());
+        engineService.unload(playedMatch.engine2());
+        if (playedMatch.engine3() != null) {
+            engineService.unload(playedMatch.engine3());
         }
 
         return ExitCode.OK;
     }
 
     private void printResult(final PlayedMatch playedMatch) {
-        final String engine1 = playedMatch.idlingEngine1().myName();
-        final String engine2 = playedMatch.idlingEngine2().myName();
+        final String engine1 = playedMatch.engine1().myName();
+        final String engine2 = playedMatch.engine2().myName();
         final List<GameResult> results = playedMatch.results();
         final List<String> reasons = playedMatch.reasons();
 

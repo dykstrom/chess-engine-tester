@@ -47,6 +47,9 @@ import static org.mockito.Mockito.when;
 class AppTest {
 
     private static final ClassicTimeControl TIME_CONTROL = new ClassicTimeControl(40, 1, 0);
+    private static final File FILE_FOO = new File("foo.json");
+    private static final File FILE_BAR = new File("bar.json");
+    private static final File FILE_TEE = new File("tee.json");
 
     private final StringWriter stdout = new StringWriter();
     private final StringWriter stderr = new StringWriter();
@@ -155,19 +158,25 @@ class AppTest {
     @Test
     void shouldPlaySingleGameMatch() throws Exception {
         // Given
-        final var foo = new File("foo.json");
-        final var bar = new File("bar.json");
         final String[] args = {
                 "-n", "1",
                 "-t", "40/60",
-                "-1", foo.getPath(),
-                "-2", bar.getPath()
+                "-1", FILE_FOO.getPath(),
+                "-2", FILE_BAR.getPath()
         };
         final MatchConfig matchConfig = new MatchConfig(1, TIME_CONTROL);
-        final PlayedMatch playedMatch = new PlayedMatch(matchConfig, idlingEngine1Mock, idlingEngine2Mock, List.of(BLACK_WON), List.of("Checkmate"));
-        when(fileServiceMock.canRead(foo)).thenReturn(true);
-        when(fileServiceMock.canRead(bar)).thenReturn(true);
-        when(engineServiceMock.load(any())).thenReturn(idlingEngine1Mock);
+        final PlayedMatch playedMatch = new PlayedMatch(
+                matchConfig,
+                idlingEngine1Mock,
+                idlingEngine2Mock,
+                null,
+                List.of(BLACK_WON),
+                List.of("Checkmate")
+        );
+        when(fileServiceMock.canRead(FILE_FOO)).thenReturn(true);
+        when(fileServiceMock.canRead(FILE_BAR)).thenReturn(true);
+        when(engineServiceMock.load(FILE_FOO)).thenReturn(idlingEngine1Mock);
+        when(engineServiceMock.load(FILE_BAR)).thenReturn(idlingEngine2Mock);
         when(matchServiceMock.playSingleGameMatch(any(), any(), any())).thenReturn(playedMatch);
         when(idlingEngine1Mock.myName()).thenReturn("foo");
         when(idlingEngine2Mock.myName()).thenReturn("bar");
@@ -183,8 +192,8 @@ class AppTest {
         assertTrue(stdout.toString().contains("1  |  foo - bar  |  0-1"));
         assertTrue(stdout.toString().contains(" : 0.0"));
         assertTrue(stdout.toString().contains(" : 1.0"));
-        verify(fileServiceMock).canRead(foo);
-        verify(fileServiceMock).canRead(bar);
+        verify(fileServiceMock).canRead(FILE_FOO);
+        verify(fileServiceMock).canRead(FILE_BAR);
         verify(engineServiceMock, times(2)).load(any());
         verify(matchServiceMock).addGameListener(any(ProgressBarWriter.class));
         verify(matchServiceMock).addGameListener(any(PgnFileWriter.class));
@@ -194,22 +203,28 @@ class AppTest {
     @Test
     void shouldPlaySingleGameMatchWithExtraEngine() throws Exception {
         // Given
-        final var foo = new File("foo.json");
-        final var bar = new File("bar.json");
-        final var tee = new File("tee.json");
         final String[] args = {
                 "-n", "1",
                 "-t", "40/60",
-                "-1", foo.getPath(),
-                "-2", bar.getPath(),
-                "-3", tee.getPath()
+                "-1", FILE_FOO.getPath(),
+                "-2", FILE_BAR.getPath(),
+                "-3", FILE_TEE.getPath()
         };
         final MatchConfig matchConfig = new MatchConfig(1, TIME_CONTROL);
-        final PlayedMatch playedMatch = new PlayedMatch(matchConfig, idlingEngine1Mock, idlingEngine2Mock, List.of(BLACK_WON), List.of("Checkmate"));
-        when(fileServiceMock.canRead(foo)).thenReturn(true);
-        when(fileServiceMock.canRead(bar)).thenReturn(true);
-        when(fileServiceMock.canRead(tee)).thenReturn(true);
-        when(engineServiceMock.load(any())).thenReturn(idlingEngine1Mock);
+        final PlayedMatch playedMatch = new PlayedMatch(
+                matchConfig,
+                idlingEngine1Mock,
+                idlingEngine2Mock,
+                idlingEngine3Mock,
+                List.of(BLACK_WON),
+                List.of("Checkmate")
+        );
+        when(fileServiceMock.canRead(FILE_FOO)).thenReturn(true);
+        when(fileServiceMock.canRead(FILE_BAR)).thenReturn(true);
+        when(fileServiceMock.canRead(FILE_TEE)).thenReturn(true);
+        when(engineServiceMock.load(FILE_FOO)).thenReturn(idlingEngine1Mock);
+        when(engineServiceMock.load(FILE_BAR)).thenReturn(idlingEngine2Mock);
+        when(engineServiceMock.load(FILE_TEE)).thenReturn(idlingEngine3Mock);
         when(matchServiceMock.playSingleGameMatchWithExtraEngine(any(), any(), any(), any())).thenReturn(playedMatch);
         when(idlingEngine1Mock.myName()).thenReturn("foo");
         when(idlingEngine2Mock.myName()).thenReturn("bar");
@@ -226,9 +241,9 @@ class AppTest {
         assertTrue(stdout.toString().contains("1  |  foo - bar  |  0-1"));
         assertTrue(stdout.toString().contains(" : 0.0"));
         assertTrue(stdout.toString().contains(" : 1.0"));
-        verify(fileServiceMock).canRead(foo);
-        verify(fileServiceMock).canRead(bar);
-        verify(fileServiceMock).canRead(tee);
+        verify(fileServiceMock).canRead(FILE_FOO);
+        verify(fileServiceMock).canRead(FILE_BAR);
+        verify(fileServiceMock).canRead(FILE_TEE);
         verify(engineServiceMock, times(3)).load(any());
         verify(matchServiceMock).addGameListener(any(ProgressBarWriter.class));
         verify(matchServiceMock).addGameListener(any(PgnFileWriter.class));
@@ -241,15 +256,21 @@ class AppTest {
         final String[] args = {
                 "-n", "4",
                 "-t", "40/60",
-                "-1", "foo.json",
-                "-2", "bar.json"
+                "-1", FILE_FOO.getPath(),
+                "-2", FILE_BAR.getPath()
         };
         final MatchConfig matchConfig = new MatchConfig(4, TIME_CONTROL);
-        final PlayedMatch playedMatch = new PlayedMatch(matchConfig, idlingEngine1Mock, idlingEngine2Mock,
+        final PlayedMatch playedMatch = new PlayedMatch(
+                matchConfig,
+                idlingEngine1Mock,
+                idlingEngine2Mock,
+                null,
                 List.of(BLACK_WON, WHITE_WON, WHITE_WON, DRAW),
-                List.of("Checkmate", "Checkmate", "Time forfeit", "Draw by repetition"));
+                List.of("Checkmate", "Checkmate", "Time forfeit", "Draw by repetition")
+        );
         when(fileServiceMock.canRead(any())).thenReturn(true);
-        when(engineServiceMock.load(any())).thenReturn(idlingEngine1Mock);
+        when(engineServiceMock.load(FILE_FOO)).thenReturn(idlingEngine1Mock);
+        when(engineServiceMock.load(FILE_BAR)).thenReturn(idlingEngine2Mock);
         when(matchServiceMock.playMatch(any(), any(), any())).thenReturn(playedMatch);
         when(idlingEngine1Mock.myName()).thenReturn("foo");
         when(idlingEngine2Mock.myName()).thenReturn("bar");

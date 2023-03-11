@@ -22,8 +22,9 @@ import com.github.bhlangonijr.chesslib.game.GameResult;
 import se.dykstrom.cet.engine.state.IdlingEngine;
 
 public record PlayedMatch(MatchConfig matchConfig,
-                          IdlingEngine idlingEngine1,
-                          IdlingEngine idlingEngine2,
+                          IdlingEngine engine1,
+                          IdlingEngine engine2,
+                          IdlingEngine engine3,
                           List<GameResult> results,
                           List<String> reasons) {
 }

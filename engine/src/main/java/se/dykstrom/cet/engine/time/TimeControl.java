@@ -23,6 +23,7 @@ public interface TimeControl {
     /**
      * Returns the XBoard command used to set this time control.
      */
+    @SuppressWarnings("SameReturnValue")
     XboardCommand xboardCommand();
 
     /**

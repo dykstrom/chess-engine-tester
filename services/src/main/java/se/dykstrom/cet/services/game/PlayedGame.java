@@ -24,8 +24,9 @@ import se.dykstrom.cet.engine.config.GameConfig;
 import se.dykstrom.cet.engine.state.IdlingEngine;
 
 public record PlayedGame(GameConfig gameConfig,
-                         IdlingEngine idlingWhiteEngine,
-                         IdlingEngine idlingBlackEngine,
+                         IdlingEngine whiteEngine,
+                         IdlingEngine blackEngine,
+                         IdlingEngine extraEngine,
                          GameResult result,
                          String reason,
                          MoveList moves,

@@ -75,8 +75,8 @@ class MatchServiceImplIT {
             assertEquals(NUMBER_OF_GAMES, matchCount.get());
         } finally {
             assert playedMatch != null;
-            unloadEngine(playedMatch.idlingEngine1());
-            unloadEngine(playedMatch.idlingEngine2());
+            unloadEngine(playedMatch.engine1());
+            unloadEngine(playedMatch.engine2());
         }
     }
 

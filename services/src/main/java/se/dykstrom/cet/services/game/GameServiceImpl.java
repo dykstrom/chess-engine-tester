@@ -57,10 +57,10 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public PlayedGame playGame(final GameConfig gameConfig,
-                               final IdlingEngine idlingWhiteEngine,
-                               final IdlingEngine idlingBlackEngine) {
+                               final IdlingEngine whiteEngine,
+                               final IdlingEngine blackEngine) {
         LOGGER.log(INFO, "Starting new game with ''{0}'' as white and ''{1}'' as black.",
-                idlingWhiteEngine.myName(), idlingBlackEngine.myName());
+                whiteEngine.myName(), blackEngine.myName());
         playing.set(true);
         var finalResult = new Result("*", "Stopped");
 
@@ -69,12 +69,10 @@ public class GameServiceImpl implements GameService {
         final var moves = new MoveList();
 
         // Engine states
-        final ForcedEngine forcedWhiteEngine = idlingWhiteEngine.start(gameConfig);
-        final ForcedEngine forcedBlackEngine = idlingBlackEngine.start(gameConfig);
+        final ForcedEngine forcedWhiteEngine = whiteEngine.start(gameConfig);
+        final ForcedEngine forcedBlackEngine = blackEngine.start(gameConfig);
         ActiveEngine activeWhiteEngine = null;
         ActiveEngine activeBlackEngine = null;
-        final IdlingEngine finalIdlingWhiteEngine;
-        final IdlingEngine finalIdlingBlackEngine;
 
         // Chess clocks
         var stoppedWhiteClock = new StoppedChessClock(gameConfig.timeControl());
@@ -140,14 +138,13 @@ public class GameServiceImpl implements GameService {
                     forcedWhiteEngine, activeWhiteEngine,
                     forcedBlackEngine, activeBlackEngine,
                     null, null);
-            finalIdlingWhiteEngine = stopEngine(activeWhiteEngine, forcedWhiteEngine);
-            finalIdlingBlackEngine = stopEngine(activeBlackEngine, forcedBlackEngine);
         }
 
         return new PlayedGame(
                 gameConfig,
-                finalIdlingWhiteEngine,
-                finalIdlingBlackEngine,
+                stopEngine(activeWhiteEngine, forcedWhiteEngine),
+                stopEngine(activeBlackEngine, forcedBlackEngine),
+                null,
                 GameResult.fromNotation(finalResult.code()),
                 finalResult.text(),
                 moves,
@@ -156,15 +153,15 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public PlayedGame playGameWithExtraEngine(final GameConfig gameConfig,
-                                              final IdlingEngine idlingWhiteEngine,
-                                              final IdlingEngine idlingBlackEngine,
-                                              final IdlingEngine idlingExtraEngine) {
-        if (!idlingExtraEngine.features().playOther()) {
-            throw new IllegalArgumentException("Extra engine '" + idlingExtraEngine.myName() + "' does not support playother command");
+                                              final IdlingEngine whiteEngine,
+                                              final IdlingEngine blackEngine,
+                                              final IdlingEngine extraEngine) {
+        if (!extraEngine.features().playOther()) {
+            throw new IllegalArgumentException("Extra engine '" + extraEngine.myName() + "' does not support playother command");
         }
 
         LOGGER.log(INFO, "Starting new game with ''{0}'' as white and ''{1}'' as black. Using ''{2}'' as extra engine.",
-                idlingWhiteEngine.myName(), idlingBlackEngine.myName(), idlingExtraEngine.myName());
+                whiteEngine.myName(), blackEngine.myName(), extraEngine.myName());
         playing.set(true);
         var finalResult = new Result("*", "Stopped");
 
@@ -174,14 +171,12 @@ public class GameServiceImpl implements GameService {
         final var extraMoves = new HashMap<Integer, String>();
 
         // Engine states
-        final ForcedEngine forcedWhiteEngine = idlingWhiteEngine.start(gameConfig);
-        final ForcedEngine forcedBlackEngine = idlingBlackEngine.start(gameConfig);
-        final ForcedEngine forcedExtraEngine = idlingExtraEngine.start(gameConfig.withBlack(idlingExtraEngine.myName()));
+        final ForcedEngine forcedWhiteEngine = whiteEngine.start(gameConfig);
+        final ForcedEngine forcedBlackEngine = blackEngine.start(gameConfig);
+        final ForcedEngine forcedExtraEngine = extraEngine.start(gameConfig.withBlack(extraEngine.myName()));
         ActiveEngine activeWhiteEngine = null;
         ActiveEngine activeBlackEngine = null;
         ActiveEngine activeExtraEngine = null;
-        final IdlingEngine finalIdlingWhiteEngine;
-        final IdlingEngine finalIdlingBlackEngine;
 
         // Chess clocks
         var stoppedWhiteClock = new StoppedChessClock(gameConfig.timeControl());
@@ -221,8 +216,8 @@ public class GameServiceImpl implements GameService {
             // Extra engine
             var extraMove = activeExtraEngine.readMove();
             logMove(EXTRA_ENGINE, extraMove, board);
-            compare(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
-            activeExtraEngine = takeExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
+            compareAndLog(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
+            activeExtraEngine = takeBackExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
             // Black engine
             updateGameState(blackMove, board, moves);
             
@@ -250,8 +245,8 @@ public class GameServiceImpl implements GameService {
                 // Extra engine
                 extraMove = activeExtraEngine.readMove();
                 logMove(EXTRA_ENGINE, extraMove, board);
-                compare(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
-                activeExtraEngine = takeExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
+                compareAndLog(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
+                activeExtraEngine = takeBackExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
                 // Black engine
                 updateGameState(blackMove, board, moves);
             }
@@ -272,24 +267,22 @@ public class GameServiceImpl implements GameService {
                     forcedWhiteEngine, activeWhiteEngine,
                     forcedBlackEngine, activeBlackEngine,
                     forcedExtraEngine, activeExtraEngine);
-
-            finalIdlingWhiteEngine = stopEngine(activeWhiteEngine, forcedWhiteEngine);
-            finalIdlingBlackEngine = stopEngine(activeBlackEngine, forcedBlackEngine);
         }
 
         return new PlayedGame(
                 gameConfig,
-                finalIdlingWhiteEngine,
-                finalIdlingBlackEngine,
+                stopEngine(activeWhiteEngine, forcedWhiteEngine),
+                stopEngine(activeBlackEngine, forcedBlackEngine),
+                stopEngine(activeExtraEngine, forcedExtraEngine),
                 GameResult.fromNotation(finalResult.code()),
                 finalResult.text(),
                 moves,
                 extraMoves);
     }
 
-    private ActiveEngine takeExtraMoveAndForceBlackMove(final ActiveEngine activeExtraEngine,
-                                                        final String whiteMove,
-                                                        final String blackMove) {
+    private ActiveEngine takeBackExtraMoveAndForceBlackMove(final ActiveEngine activeExtraEngine,
+                                                            final String whiteMove,
+                                                            final String blackMove) {
         try {
             final ForcedEngine forcedExtraEngine = activeExtraEngine.force();
             forcedExtraEngine.takeBack();
@@ -307,7 +300,7 @@ public class GameServiceImpl implements GameService {
      * and logs any differences. Returns {@code extraMove} if the moves differ. Otherwise,
      * returns an empty optional.
      */
-    private Optional<String> compare(final String blackMove, final String extraMove) {
+    private Optional<String> compareAndLog(final String blackMove, final String extraMove) {
         if (!extraMove.equals(blackMove)) {
             LOGGER.log(INFO, "Black engine returned move {0} but extra engine returned move {1}", blackMove, extraMove);
             return Optional.of(extraMove);

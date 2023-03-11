@@ -35,6 +35,7 @@ import static com.github.bhlangonijr.chesslib.game.GameResult.DRAW;
 import static com.github.bhlangonijr.chesslib.game.GameResult.WHITE_WON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,7 +48,8 @@ class GameServiceImplTest {
 
     private static final TimeControl TIME_CONTROL = new IncrementalTimeControl(5, 0, 5);
     private static final GameConfig GAME_CONFIG = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL);
-    private static final EngineFeatures EXTRA_ENGINE_FEATURES = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").build();
+    private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_YES = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").build();
+    private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_NO = EngineFeatures.builder().myName(EXTRA_NAME).playOther("0").build();
 
     private final IdlingEngine idlingWhiteEngineMock = mock(IdlingEngine.class);
     private final IdlingEngine idlingBlackEngineMock = mock(IdlingEngine.class);
@@ -181,7 +183,7 @@ class GameServiceImplTest {
         when(activeWhiteEngine.makeAndReadMove("e7e5")).thenReturn("g2g4");
         when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("d8h4");
         when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", reason)));
-        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_FEATURES);
+        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_PLAY_OTHER_YES);
         when(forcedExtraEngineMock.playOther()).thenReturn(activeExtraEngine);
 
         // When
@@ -193,5 +195,17 @@ class GameServiceImplTest {
         assertEquals("f3 e5 g4 Qh4#", playedGame.moves().toSan().strip());
         assertEquals("a5", playedGame.extraMoves().get(1));
         assertNull(playedGame.extraMoves().get(2));
+    }
+
+    @Test
+    void extraEngineDoesNotSupportPlayOther() {
+        // Given
+        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_PLAY_OTHER_NO);
+
+        // When & Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> gameService.playGameWithExtraEngine(GAME_CONFIG, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock)
+        );
     }
 }

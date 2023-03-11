@@ -58,6 +58,7 @@ class PgnFileWriterIT {
                 GAME_CONFIG,
                 null,
                 null,
+                null,
                 BLACK_WON,
                 "Checkmate",
                 moves,

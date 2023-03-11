@@ -22,17 +22,17 @@ import se.dykstrom.cet.engine.config.GameConfig;
 public interface GameService {
 
     PlayedGame playGame(final GameConfig gameConfig,
-                        final IdlingEngine idlingWhiteEngine,
-                        final IdlingEngine idlingBlackEngine);
+                        final IdlingEngine whiteEngine,
+                        final IdlingEngine blackEngine);
 
     /**
      * Plays a game between the white and black engines with an extra engine that shadows the black engine.
      * It receives the same moves as the black engine, but its counter moves are never used, only logged.
      */
     PlayedGame playGameWithExtraEngine(final GameConfig gameConfig,
-                                       final IdlingEngine idlingWhiteEngine,
-                                       final IdlingEngine idlingBlackEngine,
-                                       final IdlingEngine idlingExtraEngine);
+                                       final IdlingEngine whiteEngine,
+                                       final IdlingEngine blackEngine,
+                                       final IdlingEngine extraEngine);
 
     void stopGame();
 }
