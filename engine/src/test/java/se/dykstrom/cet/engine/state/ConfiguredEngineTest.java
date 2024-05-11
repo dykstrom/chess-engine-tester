@@ -38,19 +38,17 @@ class ConfiguredEngineTest {
     private static final String OS_COMMAND = "engine.sh";
     private static final File DIRECTORY = new File("/tmp");
     private static final EngineConfig CONFIG = new EngineConfig(ID, OS_COMMAND, DIRECTORY);
-    private static final EngineFeatures FEATURES_FOO = EngineFeatures.builder().myName("foo").userMove("1").variants("normal").build();
-    private static final EngineFeatures FEATURES_BAR = EngineFeatures.builder().myName("bar").userMove("1").variants("normal,bughouse,atomic").build();
+    private static final EngineFeatures FEATURES_FOO = EngineFeatures.builder().myName("foo").userMove("1").build();
+    private static final EngineFeatures FEATURES_BAR = EngineFeatures.builder().myName("bar").userMove("1").build();
 
     private static final String FEATURE_DONE_0 = "feature done=0";
     private static final String FEATURE_DONE_1 = "feature done=1";
     private static final String FEATURE_MY_NAME_FOO = "feature myname=foo";
     private static final String FEATURE_MY_NAME_BAR = "feature myname=bar";
     private static final String FEATURE_USER_MOVE = "feature usermove=1";
-    private static final String FEATURE_VARIANTS_FOO = "feature variants=normal";
-    private static final String FEATURE_VARIANTS_BAR = "feature variants=normal,bughouse,atomic";
 
-    private static final List<String> FEATURE_RESPONSE_NORMAL = List.of(FEATURE_MY_NAME_FOO, FEATURE_USER_MOVE, FEATURE_VARIANTS_FOO, FEATURE_DONE_1);
-    private static final List<String> FEATURE_RESPONSE_DELAYED = List.of(FEATURE_DONE_0, FEATURE_MY_NAME_BAR, FEATURE_USER_MOVE, FEATURE_VARIANTS_BAR, FEATURE_DONE_1);
+    private static final List<String> FEATURE_RESPONSE_NORMAL = List.of(FEATURE_MY_NAME_FOO, FEATURE_USER_MOVE, FEATURE_DONE_1);
+    private static final List<String> FEATURE_RESPONSE_DELAYED = List.of(FEATURE_DONE_0, FEATURE_MY_NAME_BAR, FEATURE_USER_MOVE, FEATURE_DONE_1);
 
     private final EngineProcess unloadedProcessMock = mock(EngineProcess.class);
     private final EngineProcess loadedProcessMock = mock(EngineProcess.class);

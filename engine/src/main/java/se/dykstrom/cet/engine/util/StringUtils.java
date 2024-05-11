@@ -30,4 +30,20 @@ public final class StringUtils {
         final var matcher = REGEX_STRING.matcher(s);
         return matcher.matches() ? matcher.group(1) : s;
     }
+
+    /**
+     * Extracts the chess engine name from the given command.
+     */
+    public static String getNameFromCommand(final String command) {
+        int indexOfLastSlash = command.lastIndexOf("/");
+        if (indexOfLastSlash == -1) {
+            indexOfLastSlash = command.lastIndexOf("\\");
+        }
+        int indexOfLastDot = command.lastIndexOf(".");
+        if (indexOfLastSlash < indexOfLastDot) {
+            return command.substring(indexOfLastSlash + 1, indexOfLastDot);
+        } else {
+            return command.substring(indexOfLastSlash + 1);
+        }
+    }
 }

@@ -57,7 +57,9 @@ public record ActiveEngine(EngineConfig engineConfig,
     }
 
     public void postTime(final long time, final long otim) {
-        process.sendCommand(XboardCommand.TIME, time / 10);
-        process.sendCommand(XboardCommand.OTIM, otim / 10);
+        if (features().time()) {
+            process.sendCommand(XboardCommand.TIME, time / 10);
+            process.sendCommand(XboardCommand.OTIM, otim / 10);
+        }
     }
 }

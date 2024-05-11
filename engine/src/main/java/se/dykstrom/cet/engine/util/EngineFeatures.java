@@ -16,20 +16,12 @@
 
 package se.dykstrom.cet.engine.util;
 
-import java.util.List;
-
-public record EngineFeatures(boolean analyze,
-                             boolean debug,
-                             String myName,
+public record EngineFeatures(String myName,
                              boolean name,
-                             boolean ping,
                              boolean playOther,
                              boolean reuse,
-                             boolean setBoard,
-                             boolean sigint,
-                             boolean sigterm,
-                             boolean userMove,
-                             List<String> variants) {
+                             boolean time,
+                             boolean userMove) {
 
     public static Builder builder() {
         return new Builder();
@@ -37,32 +29,12 @@ public record EngineFeatures(boolean analyze,
 
     public static class Builder {
         
-        private int analyze = 1;
-        private int debug = 0;
         private String myName = "unknown";
         private int name = 0;
-        private int ping = 0;
         private int playOther = 0;
         private int reuse = 1;
-        private int setBoard = 0;
-        private int sigint = 1;
-        private int sigterm = 1;
+        private int time = 1;
         private int userMove = 0;
-        private List<String> variants = null;
-
-        public Builder analyze(final String analyze) {
-            if (analyze != null) {
-                this.analyze = Integer.parseInt(analyze);
-            }
-            return this;
-        }
-
-        public Builder debug(final String debug) {
-            if (debug != null) {
-                this.debug = Integer.parseInt(debug);
-            }
-            return this;
-        }
 
         public Builder myName(final String myName) {
             if (myName != null) {
@@ -74,13 +46,6 @@ public record EngineFeatures(boolean analyze,
         public Builder name(final String name) {
             if (name != null) {
                 this.name = Integer.parseInt(name);
-            }
-            return this;
-        }
-
-        public Builder ping(final String ping) {
-            if (ping != null) {
-                this.ping = Integer.parseInt(ping);
             }
             return this;
         }
@@ -99,23 +64,9 @@ public record EngineFeatures(boolean analyze,
             return this;
         }
 
-        public Builder setBoard(final String setBoard) {
-            if (setBoard != null) {
-                this.setBoard = Integer.parseInt(setBoard);
-            }
-            return this;
-        }
-
-        public Builder sigint(final String sigint) {
-            if (sigint != null) {
-                this.sigint = Integer.parseInt(sigint);
-            }
-            return this;
-        }
-
-        public Builder sigterm(final String sigterm) {
-            if (sigterm != null) {
-                this.sigterm = Integer.parseInt(sigterm);
+        public Builder time(final String time) {
+            if (time != null) {
+                this.time = Integer.parseInt(time);
             }
             return this;
         }
@@ -127,27 +78,14 @@ public record EngineFeatures(boolean analyze,
             return this;
         }
 
-        public Builder variants(final String variants) {
-            if (variants != null) {
-                this.variants = List.of(variants.split(","));
-            }
-            return this;
-        }
-
         public EngineFeatures build() {
             return new EngineFeatures(
-                    analyze == 1,
-                    debug == 1,
                     myName,
                     name == 1,
-                    ping == 1,
                     playOther == 1,
                     reuse == 1,
-                    setBoard == 1,
-                    sigint == 1,
-                    sigterm == 1,
-                    userMove == 1,
-                    variants
+                    time == 1,
+                    userMove == 1
             );
         }
     }

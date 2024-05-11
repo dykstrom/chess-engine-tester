@@ -40,7 +40,7 @@ class IdlingEngineTest {
     private static final EngineConfig CONFIG = new EngineConfig(17, "engine.sh", null);
     private static final String MY_NAME = "my name";
     private static final String OPPONENT = "name of opponent";
-    private static final EngineFeatures FEATURES = EngineFeatures.builder().myName(MY_NAME).name("1").ping("1").build();
+    private static final EngineFeatures FEATURES = EngineFeatures.builder().myName(MY_NAME).name("1").build();
     private static final TimeControl TIME_CONTROL = new ClassicTimeControl(40,5, 10);
 
     private final EngineProcess unloadedProcessMock = mock(EngineProcess.class);

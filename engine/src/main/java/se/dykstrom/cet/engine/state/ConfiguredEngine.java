@@ -35,34 +35,22 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
 
     private static final System.Logger LOGGER = System.getLogger(ConfiguredEngine.class.getName());
 
-    private static final String FEATURE_ANALYZE = "analyze";
     private static final String FEATURE_DONE = "done";
-    private static final String FEATURE_DEBUG = "debug";
     private static final String FEATURE_MY_NAME = "myname";
     private static final String FEATURE_NAME = "name";
-    private static final String FEATURE_PING = "ping";
     private static final String FEATURE_PLAY_OTHER = "playother";
     private static final String FEATURE_REUSE = "reuse";
-    private static final String FEATURE_SET_BOARD = "setboard";
-    private static final String FEATURE_SIGINT = "sigint";
-    private static final String FEATURE_SIGTERM = "sigterm";
+    private static final String FEATURE_TIME = "time";
     private static final String FEATURE_USER_MOVE = "usermove";
-    private static final String FEATURE_VARIANTS = "variants";
 
     private static final Set<String> RECOGNIZED_FEATURES = Set.of(
-            FEATURE_ANALYZE,
-            FEATURE_DEBUG,
             FEATURE_DONE,
             FEATURE_MY_NAME,
             FEATURE_NAME,
-            FEATURE_PING,
             FEATURE_PLAY_OTHER,
             FEATURE_REUSE,
-            FEATURE_SET_BOARD,
-            FEATURE_SIGINT,
-            FEATURE_SIGTERM,
-            FEATURE_USER_MOVE,
-            FEATURE_VARIANTS
+            FEATURE_TIME,
+            FEATURE_USER_MOVE
     );
 
     public IdlingEngine load() {
@@ -77,6 +65,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
         return new IdlingEngine(config, features, loadedProcess);
     }
 
+    @SuppressWarnings("java:S3824")
     private EngineFeatures parseFeatures(final List<String> response, EngineProcess loadedProcess) {
         final Map<String, String> map = response.stream()
                                                 .filter(line -> line.startsWith("feature "))
@@ -97,19 +86,20 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
                             .sorted()
                             .forEach(feature -> loadedProcess.sendCommand(XboardCommand.REJECTED, feature));
 
+        // If the chess engine did not provide any name, we extract it from the command
+        if (!map.containsKey(FEATURE_MY_NAME)) {
+            final var name = StringUtils.getNameFromCommand(config.command());
+            LOGGER.log(INFO,"Extracted chess engine name ''{0}'' from command ''{1}''", name, config.command());
+            map.put(FEATURE_MY_NAME, name);
+        }
+
         return EngineFeatures.builder()
-                             .analyze(map.get(FEATURE_ANALYZE))
-                             .debug(map.get(FEATURE_DEBUG))
                              .myName(map.get(FEATURE_MY_NAME))
                              .name(map.get(FEATURE_NAME))
-                             .ping(map.get(FEATURE_PING))
                              .playOther(map.get(FEATURE_PLAY_OTHER))
                              .reuse(map.get(FEATURE_REUSE))
-                             .setBoard(map.get(FEATURE_SET_BOARD))
-                             .sigint(map.get(FEATURE_SIGINT))
-                             .sigterm(map.get(FEATURE_SIGTERM))
+                             .time(map.get(FEATURE_TIME))
                              .userMove(map.get(FEATURE_USER_MOVE))
-                             .variants(map.get(FEATURE_VARIANTS))
                              .build();
     }
 }

@@ -38,7 +38,7 @@ import static se.dykstrom.cet.engine.util.XboardCommand.FORCE;
 class ActiveEngineTest {
 
     private static final EngineConfig CONFIG = new EngineConfig(17, "engine.sh", new File("/tmp"));
-    private static final EngineFeatures FEATURES = EngineFeatures.builder().myName("name").name("1").ping("1").build();
+    private static final EngineFeatures FEATURES = EngineFeatures.builder().myName("name").name("1").build();
 
     private final EngineProcess loadedProcessMock = mock(EngineProcess.class);
     private final GameConfig gameConfigMock = mock(GameConfig.class);
