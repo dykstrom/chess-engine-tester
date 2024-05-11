@@ -2,7 +2,8 @@
 
 <div style="text-align: left">
 
-[![Build Linux](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux.yml)
+[![Build Linux Java 17](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-17.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-17.yml)
+[![Build Linux Java 21](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-21.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-21.yml)
 [![Build macOS](https://github.com/dykstrom/chess-engine-tester/actions/workflows/macos.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/macos.yml)
 [![Build Windows](https://github.com/dykstrom/chess-engine-tester/actions/workflows/windows.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/windows.yml)
 [![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)](https://github.com/dykstrom/chess-engine-tester/issues)

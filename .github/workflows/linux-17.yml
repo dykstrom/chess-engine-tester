@@ -1,4 +1,4 @@
-name: Build Linux
+name: Build Linux Java 17
 
 on:
   push:
