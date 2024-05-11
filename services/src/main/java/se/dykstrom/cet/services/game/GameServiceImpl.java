@@ -328,15 +328,20 @@ public class GameServiceImpl implements GameService {
     private void updateGameState(final String canMove, final Board board, final MoveList moves) {
         try {
             final var move = new Move(canMove, board.getSideToMove());
-            boolean isValid = board.doMove(move, false);
-            if (!isValid) {
-                final String reason;
-                if (board.isMated()) {
-                    reason = "checkmate";
-                } else {
-                    reason = null;
+            try {
+                boolean isValid = board.doMove(move, true);
+                if (!isValid) {
+                    final String reason;
+                    if (board.isMated()) {
+                        reason = "checkmate";
+                    } else {
+                        reason = null;
+                    }
+                    throw new ChessLibIllegalException(reason, canMove);
                 }
-                throw new ChessLibIllegalException(reason, canMove);
+            } catch (RuntimeException e) {
+                // ChessLib sometimes throws RuntimeException on illegal moves
+                throw new ChessLibIllegalException(e.getMessage(), canMove);
             }
             moves.add(move);
             if (board.isDraw()) {
