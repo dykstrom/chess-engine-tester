@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1.4
 
-FROM maven:3.8.7-eclipse-temurin-17-alpine
+FROM maven:3.9.6-eclipse-temurin-17-alpine
 
 RUN apk update && \
     apk add gnuchess && \
+    apk cache clean && \
     mkdir -p /cet/engines
 
 WORKDIR /cet/engines
