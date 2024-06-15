@@ -94,9 +94,9 @@ public class GameServiceImpl implements GameService {
 
             // First black move
             logMove(whiteMove, board, false);
+            forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
             forcedBlackEngine.clear();
             forcedBlackEngine.makeMove(whiteMove);
-            forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
             var runningBlackClock = stoppedBlackClock.start();
             activeBlackEngine = forcedBlackEngine.go();
             var blackMove = activeBlackEngine.readMove();
@@ -200,14 +200,14 @@ public class GameServiceImpl implements GameService {
             logMove(whiteMove, board, false);
             logMove(EXTRA_ENGINE, whiteMove, board, false);
             // Extra engine
+            forcedExtraEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
             forcedExtraEngine.clear();
             forcedExtraEngine.makeMove(whiteMove);
-            forcedExtraEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
             activeExtraEngine = forcedExtraEngine.go();
             // Black engine
+            forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
             forcedBlackEngine.clear();
             forcedBlackEngine.makeMove(whiteMove);
-            forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
             var runningBlackClock = stoppedBlackClock.start();
             activeBlackEngine = forcedBlackEngine.go();
             var blackMove = activeBlackEngine.readMove();
@@ -221,9 +221,9 @@ public class GameServiceImpl implements GameService {
             // Black engine
             updateGameState(blackMove, board, moves);
             
-
             while (playing.get()) {
                 logMove(blackMove, board, true);
+                // White engine
                 activeWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
                 runningWhiteClock = stoppedWhiteClock.start();
                 whiteMove = activeWhiteEngine.makeAndReadMove(blackMove);

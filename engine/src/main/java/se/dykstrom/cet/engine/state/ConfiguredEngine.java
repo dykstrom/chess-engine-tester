@@ -35,6 +35,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
 
     private static final System.Logger LOGGER = System.getLogger(ConfiguredEngine.class.getName());
 
+    private static final String FEATURE_DEBUG = "debug";
     private static final String FEATURE_DONE = "done";
     private static final String FEATURE_MY_NAME = "myname";
     private static final String FEATURE_NAME = "name";
@@ -44,6 +45,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
     private static final String FEATURE_USER_MOVE = "usermove";
 
     private static final Set<String> RECOGNIZED_FEATURES = Set.of(
+            FEATURE_DEBUG,
             FEATURE_DONE,
             FEATURE_MY_NAME,
             FEATURE_NAME,
@@ -94,6 +96,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
         }
 
         return EngineFeatures.builder()
+                             .debug(map.get(FEATURE_DEBUG))
                              .myName(map.get(FEATURE_MY_NAME))
                              .name(map.get(FEATURE_NAME))
                              .playOther(map.get(FEATURE_PLAY_OTHER))

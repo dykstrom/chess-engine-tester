@@ -162,6 +162,13 @@ chess engine reported an alternative move.
 ```
 
 
+### Debug Output
+
+Debug output (any line prefixed by a #) that is printed by a chess engine is logged to the 
+log file with level INFO. To see the debug output, you need to configure the log level to 
+INFO or less in file logging.properties. See above for how to configure the log level.
+
+
 ## Building
 
 To build your own version of chess-engine-tester you need Java 17 and a recent version of

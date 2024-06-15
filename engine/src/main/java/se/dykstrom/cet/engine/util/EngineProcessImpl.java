@@ -152,7 +152,7 @@ public class EngineProcessImpl implements EngineProcess {
     public void clearOutput() {
         try {
             while (parser.hasNext()) {
-                parser.next();
+                LOGGER.log(TRACE, "Ignoring: {0}", parser.next().text());
             }
         } catch (IOException e) {
             throw new EngineException(e);

@@ -16,7 +16,8 @@
 
 package se.dykstrom.cet.engine.util;
 
-public record EngineFeatures(String myName,
+public record EngineFeatures(boolean debug,
+                             String myName,
                              boolean name,
                              boolean playOther,
                              boolean reuse,
@@ -28,13 +29,21 @@ public record EngineFeatures(String myName,
     }
 
     public static class Builder {
-        
+
+        private int debug = 0;
         private String myName = "unknown";
         private int name = 0;
         private int playOther = 0;
         private int reuse = 1;
         private int time = 1;
         private int userMove = 0;
+
+        public Builder debug(final String debug) {
+            if (debug != null) {
+                this.debug = Integer.parseInt(debug);
+            }
+            return this;
+        }
 
         public Builder myName(final String myName) {
             if (myName != null) {
@@ -80,6 +89,7 @@ public record EngineFeatures(String myName,
 
         public EngineFeatures build() {
             return new EngineFeatures(
+                    debug == 1,
                     myName,
                     name == 1,
                     playOther == 1,

@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.regex.Pattern;
 
+import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.TRACE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -85,10 +86,10 @@ public class Parser {
         final var illegalMoveMatcher = REGEX_ILLEGAL_MOVE.matcher(line);
         final var invalidMoveMatcher = REGEX_INVALID_MOVE.matcher(line);
 
-        if (line.isBlank() || line.startsWith("#")) {
+        if (line.isBlank()) {
             return null;
-        } else if (line.equals("Invalid move: ")) {
-            LOGGER.log(TRACE, "Ignoring: {0}", line);
+        } else if (line.startsWith("#")) {
+            LOGGER.log(INFO, "Debug: {0}", line);
             return null;
         } else if (illegalMoveMatcher.matches()) {
             return new IllegalMove(illegalMoveMatcher.group(3), illegalMoveMatcher.group(2));

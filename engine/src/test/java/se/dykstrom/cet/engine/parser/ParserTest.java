@@ -31,20 +31,6 @@ import static se.dykstrom.cet.engine.util.StringUtils.EOL;
 class ParserTest {
 
     @Test
-    void hasNextShouldReturnFalseIfStreamIsEmpty() throws Exception {
-        // Given
-        final var output = "";
-        final var in = new ByteArrayInputStream(output.getBytes(UTF_8));
-
-        // When
-        final var parser = new Parser(in);
-        final var hasNext = parser.hasNext();
-
-        // Then
-        assertFalse(hasNext);
-    }
-
-    @Test
     void hasNextShouldReturnTrueIfStreamHasContent() throws Exception {
         // Given
         final var output = "move e2e4" + EOL;
@@ -59,9 +45,9 @@ class ParserTest {
     }
 
     @Test
-    void hasNextShouldReturnFalseIfStreamContainsGarbage() throws Exception {
+    void hasNextShouldReturnFalseIfStreamIsEmpty() throws Exception {
         // Given
-        final var output = "# Comment";
+        final var output = "";
         final var in = new ByteArrayInputStream(output.getBytes(UTF_8));
 
         // When
@@ -74,10 +60,28 @@ class ParserTest {
 
     @ParameterizedTest
     @CsvSource({
-                       "Illegal move,moving into check,e1g1",
-                       "Illegal move,,e8e8",
-                       "Invalid move,,e8e8"
-               })
+            "foo bar",
+            "# Debug output",
+            "Invalid move: " // GNU Chess outputs this
+    })
+    void hasNextShouldReturnFalse(final String output) throws Exception {
+        // Given
+        final var in = new ByteArrayInputStream(output.getBytes(UTF_8));
+
+        // When
+        final var parser = new Parser(in);
+        final var hasNext = parser.hasNext();
+
+        // Then
+        assertFalse(hasNext);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "Illegal move,moving into check,e1g1",
+            "Illegal move,,e8e8",
+            "Invalid move,,e8e8"
+    })
     void shouldParseIllegalMove(final String text, final String reason, final String move) throws Exception {
         // Given
         final var formattedReason = reason != null ? " (" + reason + ")" : "";
@@ -108,9 +112,9 @@ class ParserTest {
 
     @ParameterizedTest
     @CsvSource({
-                       "move,e2e4",
-                       "My move is :,e7e5"
-               })
+            "move,e2e4",
+            "My move is :,e7e5"
+    })
     void shouldParseMove(final String text, final String move) throws Exception {
         // Given
         final var output = text + " " + move + EOL;
@@ -126,11 +130,11 @@ class ParserTest {
 
     @ParameterizedTest
     @CsvSource({
-                       "1-0,White mates",
-                       "0-1,Black mates",
-                       "1/2-1/2,Draw",
-                       "*,Shut down"
-               })
+            "1-0,White mates",
+            "0-1,Black mates",
+            "1/2-1/2,Draw",
+            "*,Shut down"
+    })
     void shouldParseResult(final String code, final String text) throws Exception {
         // Given
         final var output = code + " {" + text + "}" + EOL;
