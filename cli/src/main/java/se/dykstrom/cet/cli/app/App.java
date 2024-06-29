@@ -53,7 +53,7 @@ import static se.dykstrom.cet.engine.util.StringUtils.EOL;
 @SuppressWarnings("unused")
 @Command(name = "cet",
          mixinStandardHelpOptions = true,
-         version = "chess-engine-tester 0.1.0",
+         version = "chess-engine-tester 0.2.1",
          description = "Tests chess engines by letting them play each other.")
 public class App implements Callable<Integer> {
 
