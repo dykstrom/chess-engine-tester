@@ -5,7 +5,7 @@
     <parent>
         <groupId>se.dykstrom.cet</groupId>
         <artifactId>chess-engine-tester</artifactId>
-        <version>0.1.1-SNAPSHOT</version>
+        <version>0.2.0</version>
     </parent>
 
     <artifactId>engine</artifactId>
