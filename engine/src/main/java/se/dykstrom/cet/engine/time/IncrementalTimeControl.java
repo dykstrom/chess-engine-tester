@@ -28,7 +28,7 @@ public record IncrementalTimeControl(int minutes, int seconds, int increment) im
     public IncrementalTimeControl {
         ensure(minutes >= 0, "minutes must be >= 0");
         ensure(seconds >= 0 && seconds < 60, "seconds must be in [0, 59]");
-        ensure(increment > 0, "increment must be > 0");
+        ensure(increment >= 0, "increment must be >= 0");
     }
 
     public IncrementalTimeControl(final int seconds, final int increment) {

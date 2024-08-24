@@ -35,8 +35,8 @@ public final class TimeControlFormat {
             final var seconds = Integer.parseInt(classicMatcher.group(2));
             return new ClassicTimeControl(moves, seconds);
         } else if (incrementalMatcher.matches()) {
-            final var seconds = Integer.parseInt(classicMatcher.group(1));
-            final var increment = Integer.parseInt(classicMatcher.group(2));
+            final var seconds = Integer.parseInt(incrementalMatcher.group(1));
+            final var increment = Integer.parseInt(incrementalMatcher.group(2));
             return new IncrementalTimeControl(seconds, increment);
         } else {
             throw new ParseException(s, 0);
