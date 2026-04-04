@@ -43,6 +43,7 @@ public final class ProcessUtils {
      */
     public static Process setUpProcess(List<String> command, final File directory) throws IOException {
         final ProcessBuilder builder = new ProcessBuilder(command).redirectErrorStream(true).directory(directory);
+        builder.environment().remove("JAVA_TOOL_OPTIONS");
         return builder.start();
     }
 
