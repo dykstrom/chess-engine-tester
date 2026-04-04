@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-FROM maven:3.9.6-eclipse-temurin-17-alpine
+FROM maven:3.9.14-eclipse-temurin-25-alpine
 
 RUN apk update && \
     apk add gnuchess && \

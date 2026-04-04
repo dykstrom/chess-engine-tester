@@ -2,8 +2,7 @@
 
 <div style="text-align: left">
 
-[![Build Linux Java 17](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-17.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-17.yml)
-[![Build Linux Java 21](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-21.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux-21.yml)
+[![Build Linux](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/linux.yml)
 [![Build macOS](https://github.com/dykstrom/chess-engine-tester/actions/workflows/macos.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/macos.yml)
 [![Build Windows](https://github.com/dykstrom/chess-engine-tester/actions/workflows/windows.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/windows.yml)
 [![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)](https://github.com/dykstrom/chess-engine-tester/issues)
@@ -11,7 +10,7 @@
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/chess-engine-tester/total)
 ![License](https://img.shields.io/github/license/dykstrom/chess-engine-tester)
 ![Top Language](https://img.shields.io/github/languages/top/dykstrom/chess-engine-tester)
-[![JDK compatibility: 17+](https://img.shields.io/badge/JDK_compatibility-17+-blue.svg)](https://adoptium.net)
+[![JDK compatibility: 25+](https://img.shields.io/badge/JDK_compatibility-25+-blue.svg)](https://adoptium.net)
 
 </div>
 
@@ -33,8 +32,8 @@ Download the latest chess-engine-tester package from the GitHub
 [releases page](https://github.com/dykstrom/chess-engine-tester/releases), and unpack it 
 somewhere on your hard drive. Add this directory to your PATH for easy access.
 
-In addition to the chess-engine-tester package itself, you also need Java 17 or later to run 
-the tool. You can download the Java 17 runtime for free from
+In addition to the chess-engine-tester package itself, you also need Java 25 or later to run 
+the tool. You can download the Java 25 runtime for free from
 [Adoptium](https://adoptium.net). If you are on Linux or macOS (or Cygwin) you can also use 
 a tool like [SDKMAN!](https://sdkman.io).
 
@@ -171,7 +170,7 @@ INFO or less in file logging.properties. See above for how to configure the log 
 
 ## Building
 
-To build your own version of chess-engine-tester you need Java 17 and a recent version of
+To build your own version of chess-engine-tester you need Java 25 and a recent version of
 [Maven](http://maven.apache.org). Note: Maven can also be installed using
 [SDKMAN!](https://sdkman.io).
 
