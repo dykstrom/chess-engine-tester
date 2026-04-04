@@ -10,9 +10,9 @@ The project is a multi-module Maven build with a strict layered dependency order
 
 ```mermaid
 graph TD
-    cli["**cli**<br/>Entry point, argument parsing,<br/>progress display"]
-    services["**services**<br/>Game & match orchestration,<br/>chess clock, PGN writing"]
-    engine["**engine**<br/>XBoard protocol, state machine,<br/>time control, subprocess I/O"]
+    cli["cli<br/>Entry point, argument parsing,<br/>progress display"]
+    services["services<br/>Game & match orchestration,<br/>chess clock, PGN writing"]
+    engine["engine<br/>XBoard protocol, state machine,<br/>time control, subprocess I/O"]
 
     cli --> services
     cli --> engine
