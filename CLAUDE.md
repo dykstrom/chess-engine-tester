@@ -75,6 +75,10 @@ Time control is abstracted as `TimeControl` with two implementations: `ClassicTi
 
 Unit tests mock `EngineProcess` to avoid needing real chess engines. Integration tests in `*IT.java` files require actual engines in `./engines/`. The Maven Failsafe plugin runs integration tests during `verify`.
 
+## References
+
+- **XBoard Engine Communication Protocol:** https://www.gnu.org/software/xboard/engine-intf.html
+
 ## Development Guidelines
 
 - **Unit tests required:** When adding new functionality, always add unit tests to verify it.
