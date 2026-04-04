@@ -16,10 +16,12 @@
 
 package se.dykstrom.cet.engine.state;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import se.dykstrom.cet.engine.config.EngineConfig;
 import se.dykstrom.cet.engine.util.EngineFeatures;
@@ -29,7 +31,7 @@ import se.dykstrom.cet.engine.util.XboardCommand;
 
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.INFO;
-import static java.util.stream.Collectors.toMap;
+import static se.dykstrom.cet.engine.util.StringUtils.unstringify;
 
 public record ConfiguredEngine(EngineConfig config, EngineProcess process) implements Engine {
 
@@ -43,6 +45,8 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
     private static final String FEATURE_REUSE = "reuse";
     private static final String FEATURE_TIME = "time";
     private static final String FEATURE_USER_MOVE = "usermove";
+
+    private static final Pattern FEATURE_PATTERN = Pattern.compile("(\\w+)=(\"(?:[^\"\\\\]|\\\\.)*\"|\\S+)");
 
     private static final Set<String> RECOGNIZED_FEATURES = Set.of(
             FEATURE_DEBUG,
@@ -61,20 +65,22 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
         loadedProcess.sendCommand(XboardCommand.XBOARD);
         loadedProcess.sendCommand(XboardCommand.PROTOVER, 2);
         loadedProcess.sendCommand(XboardCommand.FORCE);
-        final var response = loadedProcess.readUntil("feature done=1");
+        final var response = loadedProcess.readUntil("done=1");
         EngineFeatures features = parseFeatures(response, loadedProcess);
         LOGGER.log(DEBUG, "Recognized features: {0}", features);
         return new IdlingEngine(config, features, loadedProcess);
     }
 
-    @SuppressWarnings("java:S3824")
     private EngineFeatures parseFeatures(final List<String> response, EngineProcess loadedProcess) {
-        final Map<String, String> map = response.stream()
-                                                .filter(line -> line.startsWith("feature "))
-                                                .map(line -> line.substring("feature ".length()).split("="))
-                                                .collect(toMap(feature -> feature[0],
-                                                        feature -> StringUtils.unstringify(feature[1]),
-                                                        (v1, v2) -> v2));
+        final Map<String, String> map = new HashMap<>();
+        response.stream()
+                .filter(line -> line.startsWith("feature "))
+                .forEach(line -> {
+                    final var matcher = FEATURE_PATTERN.matcher(line.substring("feature ".length()));
+                    while (matcher.find()) {
+                        map.put(matcher.group(1), unstringify(matcher.group(2)));
+                    }
+                });
         // Accept recognized features
         RECOGNIZED_FEATURES.stream()
                            .filter(map::containsKey)

@@ -23,6 +23,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class StringUtilsTest {
 
     @Test
+    void shouldUnstringify() {
+        assertEquals("foo", StringUtils.unstringify("\"foo\""));
+        assertEquals("", StringUtils.unstringify("\"\""));
+        assertEquals("foo", StringUtils.unstringify("foo"));
+        assertEquals("1", StringUtils.unstringify("1"));
+    }
+
+    @Test
     void shouldExtractEngineName() {
         assertEquals("gnuchess", StringUtils.getNameFromCommand("gnuchess"));
         assertEquals("gnuchess", StringUtils.getNameFromCommand("/usr/local/bin/gnuchess"));
