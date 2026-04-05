@@ -26,6 +26,8 @@ Any context needed to understand the problem — relevant code, prior decisions,
 Delete this section if not needed.
 -->
 
+The Chess Engine Communication Protocol is specified at https://www.gnu.org/software/xboard/engine-intf.html.
+
 ## Design
 
 <!--
