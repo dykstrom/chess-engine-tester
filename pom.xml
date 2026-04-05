@@ -15,7 +15,7 @@
     </properties>
 
     <scm>
-        <developerConnection>scm:git:https://github.com/dykstrom/chess-engine-tester.git</developerConnection>
+        <developerConnection>scm:git:git@github.com:dykstrom/chess-engine-tester.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
