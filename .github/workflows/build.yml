@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [ main, dev, fen-position-parameter ]
+    branches: [ main, dev, feature/fen-position-parameter ]
   pull_request:
     branches: [ main, dev ]
   workflow_dispatch:
