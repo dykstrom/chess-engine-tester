@@ -21,6 +21,7 @@ chess engines use this position in all games.
 
 * The starting position can be specified as a command line argument.
 * The position is validated before starting any game.
+* The starting position can allow either WHITE or BLACK to make the first move.
 * The position is sent to all chess engines when starting a new game.
 * It is actually used by the engines when playing the games.
 * The starting position is written to the log file and if possible to the PGN file.
@@ -74,6 +75,9 @@ could spot flaws without reading code. Include:
   feature that has a default value of 0. If one or both of the engines report that they
   do not support the setboard feature, an error should be printed and no game should be
   started. Compare with how the "playother" feature is checked in GameServiceImpl.
+* If the specified FEN position dictates that BLACK is on the move, the game service should
+  let BLACK make the first move. The current implementation assumes that WHITE always
+  makes the first move.
 * The starting position should be included in the PGN file in attribute "FEN".
 
 ## Acceptance criteria
@@ -83,6 +87,7 @@ Concrete, testable conditions that define "done". Use checkboxes.
 -->
 
 - [ ] All new behaviour is covered by unit tests
+- [ ] Units tests should cover the case when BLACK starts the game
 - [ ] New behaviour should also be covered by integration tests to prove that the
-      application can actually send the FEN string and that the engines receive it.
+      application can actually send the FEN string and that the engines receive it
 - [ ] Integration tests pass (`mvn clean verify`)

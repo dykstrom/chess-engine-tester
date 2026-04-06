@@ -86,3 +86,4 @@ Unit tests mock `EngineProcess` to avoid needing real chess engines. Integration
 - **Cross-platform:** The application must work on Linux, macOS, and Windows. Avoid OS-specific APIs or path separators.
 - **Preserve the state machine:** Do not break the explicit state machine pattern in the Engine implementations (`CreatedEngine` → `ConfiguredEngine` → `IdlingEngine` → `ForcedEngine` → `ActiveEngine`).
 - **Plan first:** ALWAYS start in plan mode. Create and display a plan to the user before making any changes.
+- **Be concise:** Write concise comments and commit messages. Avoid obvious comments.
