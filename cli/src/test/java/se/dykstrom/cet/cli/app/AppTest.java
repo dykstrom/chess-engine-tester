@@ -156,6 +156,26 @@ class AppTest {
     }
 
     @Test
+    void shouldNotAllowInvalidFen() {
+        // Given
+        final String[] args = {
+                "-n", "1",
+                "-t", "40/60",
+                "-f", "this is not a valid FEN",
+                "-1", "foo.json",
+                "-2", "bar.json"
+        };
+
+        // When
+        final var exitCode = commandLine.execute(args);
+
+        // Then
+        assertEquals(CommandLine.ExitCode.USAGE, exitCode);
+        assertTrue(stdout.toString().isBlank());
+        assertTrue(stderr.toString().contains("Invalid FEN position"));
+    }
+
+    @Test
     void shouldPlaySingleGameMatch() throws Exception {
         // Given
         final String[] args = {
