@@ -94,32 +94,68 @@ public class GameServiceImpl implements GameService {
         ThreadUtils.sleepSilently(100);
 
         try {
-            // First white move
-            forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-            forcedWhiteEngine.clear();
-            var runningWhiteClock = stoppedWhiteClock.start();
-            activeWhiteEngine = forcedWhiteEngine.go();
-            var whiteMove = activeWhiteEngine.readMove();
-            stoppedWhiteClock = runningWhiteClock.stop();
-            logMove(whiteMove, board);
-            updateGameState(whiteMove, board, moves);
+            String whiteMove;
+            String blackMove;
 
-            // First black move
-            logMove(whiteMove, board, false);
-            forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-            forcedBlackEngine.clear();
-            forcedBlackEngine.makeMove(whiteMove);
-            var runningBlackClock = stoppedBlackClock.start();
-            activeBlackEngine = forcedBlackEngine.go();
-            var blackMove = activeBlackEngine.readMove();
-            stoppedBlackClock = runningBlackClock.stop();
-            logMove(blackMove, board);
-            updateGameState(blackMove, board, moves);
+            if (board.getSideToMove() == WHITE) {
+                // First white move
+                forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
+                forcedWhiteEngine.clear();
+                var runningWhiteClock = stoppedWhiteClock.start();
+                activeWhiteEngine = forcedWhiteEngine.go();
+                whiteMove = activeWhiteEngine.readMove();
+                stoppedWhiteClock = runningWhiteClock.stop();
+                logMove(whiteMove, board);
+                updateGameState(whiteMove, board, moves);
+
+                // First black move
+                logMove(whiteMove, board, false);
+                forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
+                forcedBlackEngine.clear();
+                forcedBlackEngine.makeMove(whiteMove);
+                var runningBlackClock = stoppedBlackClock.start();
+                activeBlackEngine = forcedBlackEngine.go();
+                blackMove = activeBlackEngine.readMove();
+                stoppedBlackClock = runningBlackClock.stop();
+                logMove(blackMove, board);
+                updateGameState(blackMove, board, moves);
+            } else {
+                // First black move (black starts per FEN)
+                forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
+                forcedBlackEngine.clear();
+                var runningBlackClock = stoppedBlackClock.start();
+                activeBlackEngine = forcedBlackEngine.go();
+                var initialBlackMove = activeBlackEngine.readMove();
+                stoppedBlackClock = runningBlackClock.stop();
+                logMove(initialBlackMove, board);
+                updateGameState(initialBlackMove, board, moves);
+
+                // First white move (responding to black's opening move)
+                logMove(initialBlackMove, board, true);
+                forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
+                forcedWhiteEngine.clear();
+                forcedWhiteEngine.makeMove(initialBlackMove);
+                var runningWhiteClock = stoppedWhiteClock.start();
+                activeWhiteEngine = forcedWhiteEngine.go();
+                whiteMove = activeWhiteEngine.readMove();
+                stoppedWhiteClock = runningWhiteClock.stop();
+                logMove(whiteMove, board);
+                updateGameState(whiteMove, board, moves);
+
+                // Black responds to white's first move (sets up blackMove for the loop)
+                logMove(whiteMove, board, false);
+                activeBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
+                var runningBlackClock2 = stoppedBlackClock.start();
+                blackMove = activeBlackEngine.makeAndReadMove(whiteMove);
+                stoppedBlackClock = runningBlackClock2.stop();
+                logMove(blackMove, board);
+                updateGameState(blackMove, board, moves);
+            }
 
             while (playing.get()) {
                 logMove(blackMove, board, true);
                 activeWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-                runningWhiteClock = stoppedWhiteClock.start();
+                var runningWhiteClock = stoppedWhiteClock.start();
                 whiteMove = activeWhiteEngine.makeAndReadMove(blackMove);
                 stoppedWhiteClock = runningWhiteClock.stop();
                 logMove(whiteMove, board);
@@ -127,7 +163,7 @@ public class GameServiceImpl implements GameService {
 
                 logMove(whiteMove, board, false);
                 activeBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                runningBlackClock = stoppedBlackClock.start();
+                var runningBlackClock = stoppedBlackClock.start();
                 blackMove = activeBlackEngine.makeAndReadMove(whiteMove);
                 stoppedBlackClock = runningBlackClock.stop();
                 logMove(blackMove, board);

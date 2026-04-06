@@ -50,6 +50,10 @@ class GameServiceImplTest {
     private static final String FEN_FRENCH_DEFENSE = "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
     private static final String FEN_FOOLS_MATE_1 = "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6 0 1";
     private static final String FEN_FOOLS_MATE_3 = "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 2";
+    // After 1.f3 with BLACK to move — playing e5, g4, Qh4# is Fool's Mate
+    private static final String FEN_AFTER_F3_BLACK_TO_MOVE = "rnbqkbnr/pppppppp/8/8/8/5P2/PPPPP1PP/RNBQKBNR b KQkq - 0 1";
+    // Fool's Mate position reached from FEN_AFTER_F3_BLACK_TO_MOVE (fullmove counter is 3, not 2)
+    private static final String FEN_FOOLS_MATE_3_FROM_BLACK = "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3";
 
     private static final TimeControl TIME_CONTROL = new IncrementalTimeControl(5, 0, 5);
     private static final GameConfig GAME_CONFIG = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL);
@@ -126,6 +130,27 @@ class GameServiceImplTest {
         assertEquals(2, playedGame.moves().size());
         assertEquals(FEN_FOOLS_MATE_3, playedGame.moves().getFen());
         assertArrayEquals(new String[]{"g4", "Qh4#"}, playedGame.moves().toSanArray());
+    }
+
+    @Test
+    void shouldPlayFromPositionWithBlackMovingFirst() {
+        // Given: FEN after 1.f3 where it's black's turn; playing e5 g4 Qh4# is Fool's Mate
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_AFTER_F3_BLACK_TO_MOVE);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+
+        // When
+        final var playedGame = gameService.playGame(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(3, playedGame.moves().size());
+        assertEquals(FEN_FOOLS_MATE_3_FROM_BLACK, playedGame.moves().getFen());
+        assertArrayEquals(new String[]{"e5", "g4", "Qh4#"}, playedGame.moves().toSanArray());
     }
 
     @Test
