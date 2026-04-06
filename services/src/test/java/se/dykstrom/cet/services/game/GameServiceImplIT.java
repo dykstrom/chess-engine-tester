@@ -47,6 +47,7 @@ import static se.dykstrom.cet.services.util.TestConfig.ENGINE_3_DIRECTORY;
 class GameServiceImplIT {
 
     private static final TimeControl TIME_CONTROL = new ClassicTimeControl(40, 0, 20);
+    private static final String FEN_FOOLS_MATE_1 = "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6 0 1";
 
     private final GameServiceImpl gameService = new GameServiceImpl();
 
@@ -74,6 +75,43 @@ class GameServiceImplIT {
             System.out.println("Game result: " + playedGame.result());
             assertEquals(gameConfig, playedGame.gameConfig());
             assertNotNull(playedGame.result());
+            assertNotNull(playedGame.moves().toSanArray());
+        } finally {
+            unloadEngine(whiteEngine);
+            unloadEngine(blackEngine);
+        }
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    void shouldPlayGameFromPositionOnLinux() throws Exception {
+        shouldPlayGameFromPosition(ENGINE_1_COMMAND_LINUX, ENGINE_2_COMMAND_LINUX);
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void shouldPlayGameFromPositionOnWindows() throws Exception {
+        shouldPlayGameFromPosition(ENGINE_1_COMMAND_WINDOWS, ENGINE_2_COMMAND_WINDOWS);
+    }
+
+    void shouldPlayGameFromPosition(final String whiteCommand,
+                                    final String blackCommand) throws Exception {
+        final IdlingEngine whiteEngine = loadEngine(1, whiteCommand, ENGINE_1_DIRECTORY);
+        final IdlingEngine blackEngine = loadEngine(2, blackCommand, ENGINE_2_DIRECTORY);
+
+        final var gameConfig = new GameConfig(
+                whiteEngine.features().myName(),
+                blackEngine.features().myName(),
+                TIME_CONTROL,
+                FEN_FOOLS_MATE_1
+        );
+
+        try {
+            PlayedGame playedGame = gameService.playGame(gameConfig, whiteEngine, blackEngine);
+            System.out.println("Game result: " + playedGame.result());
+            assertEquals(gameConfig, playedGame.gameConfig());
+            assertNotNull(playedGame.result());
+            assertNotNull(playedGame.moves().toSanArray());
         } finally {
             unloadEngine(whiteEngine);
             unloadEngine(blackEngine);

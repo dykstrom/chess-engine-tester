@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.function.Function;
 
+import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.game.GameResult;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -53,7 +54,7 @@ import static se.dykstrom.cet.engine.util.StringUtils.EOL;
 @SuppressWarnings("unused")
 @Command(name = "cet",
          mixinStandardHelpOptions = true,
-         version = "chess-engine-tester 0.3.1",
+         version = "chess-engine-tester 0.4.0",
          description = "Tests chess engines by letting them play each other.")
 public class App implements Callable<Integer> {
 
@@ -79,6 +80,11 @@ public class App implements Callable<Integer> {
             paramLabel = "NUMBER",
             required = true)
     private int numberOfGames;
+
+    @Option(names = {"-f", "--fen"},
+            description = "Starting position in FEN format. Defaults to standard starting position.",
+            paramLabel = "FEN")
+    private String fenString;
 
     @Option(names = {"-t", "--time"},
             description = "Time control in PGN format. Either moves/seconds or initial+increase (both in seconds).",
@@ -117,6 +123,15 @@ public class App implements Callable<Integer> {
         } catch (ParseException e) {
             spec.commandLine().getErr().println("Cannot parse time control: " + timeControlString);
             return ExitCode.USAGE;
+        }
+
+        if (fenString != null) {
+            try {
+                new Board().loadFromFen(fenString);
+            } catch (Exception e) {
+                spec.commandLine().getErr().println("Invalid FEN position: " + fenString);
+                return ExitCode.USAGE;
+            }
         }
 
         if (!fileService.canRead(engine1File)) {
@@ -164,6 +179,9 @@ public class App implements Callable<Integer> {
             spec.commandLine().getOut().println("Black engine is shadowed by " + engine3.myName());
         }
         spec.commandLine().getOut().println("Time control is " + timeControl.toPgn());
+        if (fenString != null) {
+            spec.commandLine().getOut().println("Starting position is " + fenString);
+        }
         if (outputFile != null) {
             spec.commandLine().getOut().println("Saving games to " + outputFile);
         }
@@ -172,12 +190,12 @@ public class App implements Callable<Integer> {
         final PlayedMatch playedMatch;
         if (numberOfGames == 1) {
             if (engine3File != null) {
-                playedMatch = matchService.playSingleGameMatchWithExtraEngine(timeControl, engine1, engine2, engine3);
+                playedMatch = matchService.playSingleGameMatchWithExtraEngine(timeControl, fenString, engine1, engine2, engine3);
             } else {
-                playedMatch = matchService.playSingleGameMatch(timeControl, engine1, engine2);
+                playedMatch = matchService.playSingleGameMatch(timeControl, fenString, engine1, engine2);
             }
         } else {
-            playedMatch = matchService.playMatch(new MatchConfig(numberOfGames, timeControl), engine1, engine2);
+            playedMatch = matchService.playMatch(new MatchConfig(numberOfGames, timeControl, fenString), engine1, engine2);
         }
         printResult(playedMatch);
 

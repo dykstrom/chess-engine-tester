@@ -20,7 +20,11 @@ import se.dykstrom.cet.engine.time.TimeControl;
 
 import static se.dykstrom.cet.engine.util.Args.ensure;
 
-public record MatchConfig(int numberOfGames, TimeControl timeControl) {
+public record MatchConfig(int numberOfGames, TimeControl timeControl, String fen) {
+
+    public MatchConfig(int numberOfGames, TimeControl timeControl) {
+        this(numberOfGames, timeControl, null);
+    }
 
     public MatchConfig {
         ensure(numberOfGames > 0, "numberOfGames must be > 0");

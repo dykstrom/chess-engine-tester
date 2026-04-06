@@ -21,6 +21,7 @@ public record EngineFeatures(boolean debug,
                              boolean name,
                              boolean playOther,
                              boolean reuse,
+                             boolean setboard,
                              boolean time,
                              boolean userMove) {
 
@@ -35,6 +36,7 @@ public record EngineFeatures(boolean debug,
         private int name = 0;
         private int playOther = 0;
         private int reuse = 1;
+        private int setboard = 0;
         private int time = 1;
         private int userMove = 0;
 
@@ -73,6 +75,13 @@ public record EngineFeatures(boolean debug,
             return this;
         }
 
+        public Builder setboard(final String setboard) {
+            if (setboard != null) {
+                this.setboard = Integer.parseInt(setboard);
+            }
+            return this;
+        }
+
         public Builder time(final String time) {
             if (time != null) {
                 this.time = Integer.parseInt(time);
@@ -94,6 +103,7 @@ public record EngineFeatures(boolean debug,
                     name == 1,
                     playOther == 1,
                     reuse == 1,
+                    setboard == 1,
                     time == 1,
                     userMove == 1
             );

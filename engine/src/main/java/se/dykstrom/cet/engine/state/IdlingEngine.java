@@ -37,6 +37,9 @@ public record IdlingEngine(EngineConfig engineConfig, EngineFeatures features, E
         process.sendCommand(XboardCommand.EASY);
         process.sendCommand(XboardCommand.FORCE);
         process.sendCommand(XboardCommand.COMPUTER);
+        if (gameConfig.fen() != null) {
+            process.sendCommand(XboardCommand.SETBOARD, gameConfig.fen());
+        }
         if (features.name()) {
             if (Objects.equals(features.myName(), gameConfig.white())) {
                 process.sendCommand(XboardCommand.NAME, gameConfig.black());

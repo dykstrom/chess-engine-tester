@@ -76,7 +76,7 @@ class MatchServiceImplTest {
                 .thenReturn(gamePlayedWithEngine1AsWhite);
 
         // When
-        final var playedMatch = matchService.playSingleGameMatch(TIME_CONTROL, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
+        final var playedMatch = matchService.playSingleGameMatch(TIME_CONTROL, null, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
 
         // Then
         assertEquals(List.of(WHITE_WON), playedMatch.results());
@@ -94,7 +94,8 @@ class MatchServiceImplTest {
                 .thenReturn(gamePlayedWithEngine1AsWhite);
 
         // When
-        final var playedMatch = matchService.playSingleGameMatchWithExtraEngine(TIME_CONTROL, initialIdlingEngine1Mock, initialIdlingEngine2Mock, initialIdlingEngine3Mock);
+        final var playedMatch = matchService.playSingleGameMatchWithExtraEngine(TIME_CONTROL, null,
+                initialIdlingEngine1Mock, initialIdlingEngine2Mock, initialIdlingEngine3Mock);
 
         // Then
         assertEquals(List.of(WHITE_WON), playedMatch.results());

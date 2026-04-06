@@ -33,6 +33,7 @@ import se.dykstrom.cet.services.exception.TimeoutException;
 import static com.github.bhlangonijr.chesslib.game.GameResult.BLACK_WON;
 import static com.github.bhlangonijr.chesslib.game.GameResult.DRAW;
 import static com.github.bhlangonijr.chesslib.game.GameResult.WHITE_WON;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,10 +47,21 @@ class GameServiceImplTest {
     private static final String BLACK_NAME = "BlackEngine";
     private static final String EXTRA_NAME = "ExtraEngine";
 
+    private static final String FEN_FRENCH_DEFENSE = "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+    private static final String FEN_FOOLS_MATE_1 = "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6 0 1";
+    private static final String FEN_FOOLS_MATE_3 = "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 2";
+
     private static final TimeControl TIME_CONTROL = new IncrementalTimeControl(5, 0, 5);
     private static final GameConfig GAME_CONFIG = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_FD = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_FRENCH_DEFENSE);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_FM1 = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_FOOLS_MATE_1);
+
     private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_YES = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").build();
     private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_NO = EngineFeatures.builder().myName(EXTRA_NAME).playOther("0").build();
+    private static final EngineFeatures WHITE_ENGINE_SET_BOARD_YES = EngineFeatures.builder().myName(WHITE_NAME).setboard("1").build();
+    private static final EngineFeatures WHITE_ENGINE_SET_BOARD_NO = EngineFeatures.builder().myName(WHITE_NAME).setboard("0").build();
+    private static final EngineFeatures BLACK_ENGINE_SET_BOARD_YES = EngineFeatures.builder().myName(BLACK_NAME).setboard("1").build();
+    private static final EngineFeatures BLACK_ENGINE_SET_BOARD_NO = EngineFeatures.builder().myName(BLACK_NAME).setboard("0").build();
 
     private final IdlingEngine idlingWhiteEngineMock = mock(IdlingEngine.class);
     private final IdlingEngine idlingBlackEngineMock = mock(IdlingEngine.class);
@@ -95,6 +107,25 @@ class GameServiceImplTest {
 
         // Then
         assertEquals(BLACK_WON, playedGame.result());
+    }
+
+    @Test
+    void shouldPlayFromPosition() {
+        // Given
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.readMove()).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+
+        // When
+        final var playedGame = gameService.playGame(GAME_CONFIG_WITH_FEN_FM1, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(2, playedGame.moves().size());
+        assertEquals(FEN_FOOLS_MATE_3, playedGame.moves().getFen());
+        assertArrayEquals(new String[]{"g4", "Qh4#"}, playedGame.moves().toSanArray());
     }
 
     @Test
@@ -206,6 +237,33 @@ class GameServiceImplTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> gameService.playGameWithExtraEngine(GAME_CONFIG, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock)
+        );
+    }
+
+    @Test
+    void whiteEngineDoesNotSupportSetboard() {
+        // Given
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_NO);
+        when(idlingWhiteEngineMock.myName()).thenReturn(WHITE_NAME);
+
+        // When & Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> gameService.playGame(GAME_CONFIG_WITH_FEN_FD, idlingWhiteEngineMock, idlingBlackEngineMock)
+        );
+    }
+
+    @Test
+    void blackEngineDoesNotSupportSetboard() {
+        // Given
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_NO);
+        when(idlingBlackEngineMock.myName()).thenReturn(BLACK_NAME);
+
+        // When & Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> gameService.playGame(GAME_CONFIG_WITH_FEN_FD, idlingWhiteEngineMock, idlingBlackEngineMock)
         );
     }
 }

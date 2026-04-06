@@ -18,8 +18,13 @@ package se.dykstrom.cet.engine.config;
 
 import se.dykstrom.cet.engine.time.TimeControl;
 
-public record GameConfig(String white, String black, TimeControl timeControl) {
+public record GameConfig(String white, String black, TimeControl timeControl, String fen) {
+
+    public GameConfig(String white, String black, TimeControl timeControl) {
+        this(white, black, timeControl, null);
+    }
+
     public GameConfig withBlack(final String black) {
-        return new GameConfig(white, black, timeControl);
+        return new GameConfig(white, black, timeControl, fen);
     }
 }

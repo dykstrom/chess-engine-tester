@@ -43,6 +43,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
     private static final String FEATURE_NAME = "name";
     private static final String FEATURE_PLAY_OTHER = "playother";
     private static final String FEATURE_REUSE = "reuse";
+    private static final String FEATURE_SET_BOARD = "setboard";
     private static final String FEATURE_TIME = "time";
     private static final String FEATURE_USER_MOVE = "usermove";
 
@@ -55,6 +56,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
             FEATURE_NAME,
             FEATURE_PLAY_OTHER,
             FEATURE_REUSE,
+            FEATURE_SET_BOARD,
             FEATURE_TIME,
             FEATURE_USER_MOVE
     );
@@ -107,6 +109,7 @@ public record ConfiguredEngine(EngineConfig config, EngineProcess process) imple
                              .name(map.get(FEATURE_NAME))
                              .playOther(map.get(FEATURE_PLAY_OTHER))
                              .reuse(map.get(FEATURE_REUSE))
+                             .setboard(map.get(FEATURE_SET_BOARD))
                              .time(map.get(FEATURE_TIME))
                              .userMove(map.get(FEATURE_USER_MOVE))
                              .build();

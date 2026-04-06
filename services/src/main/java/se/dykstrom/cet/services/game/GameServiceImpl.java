@@ -59,6 +59,15 @@ public class GameServiceImpl implements GameService {
     public PlayedGame playGame(final GameConfig gameConfig,
                                final IdlingEngine whiteEngine,
                                final IdlingEngine blackEngine) {
+        if (gameConfig.fen() != null) {
+            if (!whiteEngine.features().setboard()) {
+                throw new IllegalArgumentException("Engine '" + whiteEngine.myName() + "' does not support setboard command");
+            }
+            if (!blackEngine.features().setboard()) {
+                throw new IllegalArgumentException("Engine '" + blackEngine.myName() + "' does not support setboard command");
+            }
+        }
+
         LOGGER.log(INFO, "Starting new game with ''{0}'' as white and ''{1}'' as black.",
                 whiteEngine.myName(), blackEngine.myName());
         playing.set(true);
@@ -66,7 +75,10 @@ public class GameServiceImpl implements GameService {
 
         // Game state
         final var board = new Board();
-        final var moves = new MoveList();
+        if (gameConfig.fen() != null) {
+            board.loadFromFen(gameConfig.fen());
+        }
+        final var moves = gameConfig.fen() == null ? new MoveList() : new MoveList(gameConfig.fen());
 
         // Engine states
         final ForcedEngine forcedWhiteEngine = whiteEngine.start(gameConfig);
@@ -159,6 +171,17 @@ public class GameServiceImpl implements GameService {
         if (!extraEngine.features().playOther()) {
             throw new IllegalArgumentException("Extra engine '" + extraEngine.myName() + "' does not support playother command");
         }
+        if (gameConfig.fen() != null) {
+            if (!whiteEngine.features().setboard()) {
+                throw new IllegalArgumentException("Engine '" + whiteEngine.myName() + "' does not support setboard command");
+            }
+            if (!blackEngine.features().setboard()) {
+                throw new IllegalArgumentException("Engine '" + blackEngine.myName() + "' does not support setboard command");
+            }
+            if (!extraEngine.features().setboard()) {
+                throw new IllegalArgumentException("Engine '" + extraEngine.myName() + "' does not support setboard command");
+            }
+        }
 
         LOGGER.log(INFO, "Starting new game with ''{0}'' as white and ''{1}'' as black. Using ''{2}'' as extra engine.",
                 whiteEngine.myName(), blackEngine.myName(), extraEngine.myName());
@@ -167,7 +190,10 @@ public class GameServiceImpl implements GameService {
 
         // Game state
         final var board = new Board();
-        final var moves = new MoveList();
+        if (gameConfig.fen() != null) {
+            board.loadFromFen(gameConfig.fen());
+        }
+        final var moves = gameConfig.fen() == null ? new MoveList() : new MoveList(gameConfig.fen());
         final var extraMoves = new HashMap<Integer, String>();
 
         // Engine states

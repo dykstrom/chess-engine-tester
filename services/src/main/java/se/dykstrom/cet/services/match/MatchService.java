@@ -25,10 +25,12 @@ public interface MatchService {
     void addGameListener(final GameListener gameListener);
 
     PlayedMatch playSingleGameMatch(final TimeControl timeControl,
+                                    final String fen,
                                     final IdlingEngine engine1,
                                     final IdlingEngine engine2);
 
     PlayedMatch playSingleGameMatchWithExtraEngine(final TimeControl timeControl,
+                                                   final String fen,
                                                    final IdlingEngine engine1,
                                                    final IdlingEngine engine2,
                                                    final IdlingEngine engine3);
