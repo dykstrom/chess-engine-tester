@@ -41,6 +41,7 @@ import static com.github.bhlangonijr.chesslib.Side.WHITE;
 import static java.lang.System.Logger.Level.DEBUG;
 import static java.lang.System.Logger.Level.INFO;
 import static java.lang.System.Logger.Level.WARNING;
+import static se.dykstrom.cet.engine.util.Args.ensure;
 import static se.dykstrom.cet.services.util.BoardUtils.isDrawBy50thMoveRule;
 import static se.dykstrom.cet.services.util.ResultUtils.createDrawResult;
 import static se.dykstrom.cet.services.util.ResultUtils.createEngineResult;
@@ -60,12 +61,8 @@ public class GameServiceImpl implements GameService {
                                final IdlingEngine whiteEngine,
                                final IdlingEngine blackEngine) {
         if (gameConfig.fen() != null) {
-            if (!whiteEngine.features().setboard()) {
-                throw new IllegalArgumentException("Engine '" + whiteEngine.myName() + "' does not support setboard command");
-            }
-            if (!blackEngine.features().setboard()) {
-                throw new IllegalArgumentException("Engine '" + blackEngine.myName() + "' does not support setboard command");
-            }
+            ensure(whiteEngine.features().setboard(), "Engine '%s' does not support setboard command", whiteEngine.myName());
+            ensure(blackEngine.features().setboard(), "Engine '%s' does not support setboard command", blackEngine.myName());
         }
 
         LOGGER.log(INFO, "Starting new game with ''{0}'' as white and ''{1}'' as black.",
@@ -97,6 +94,8 @@ public class GameServiceImpl implements GameService {
             String whiteMove;
             String blackMove;
 
+            // TODO: Refactor the if statement.
+
             if (board.getSideToMove() == WHITE) {
                 // First white move
                 forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
@@ -125,16 +124,16 @@ public class GameServiceImpl implements GameService {
                 forcedBlackEngine.clear();
                 var runningBlackClock = stoppedBlackClock.start();
                 activeBlackEngine = forcedBlackEngine.go();
-                var initialBlackMove = activeBlackEngine.readMove();
+                blackMove = activeBlackEngine.readMove();
                 stoppedBlackClock = runningBlackClock.stop();
-                logMove(initialBlackMove, board);
-                updateGameState(initialBlackMove, board, moves);
+                logMove(blackMove, board);
+                updateGameState(blackMove, board, moves);
 
                 // First white move (responding to black's opening move)
-                logMove(initialBlackMove, board, true);
+                logMove(blackMove, board, true);
                 forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
                 forcedWhiteEngine.clear();
-                forcedWhiteEngine.makeMove(initialBlackMove);
+                forcedWhiteEngine.makeMove(blackMove);
                 var runningWhiteClock = stoppedWhiteClock.start();
                 activeWhiteEngine = forcedWhiteEngine.go();
                 whiteMove = activeWhiteEngine.readMove();
@@ -145,9 +144,9 @@ public class GameServiceImpl implements GameService {
                 // Black responds to white's first move (sets up blackMove for the loop)
                 logMove(whiteMove, board, false);
                 activeBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                var runningBlackClock2 = stoppedBlackClock.start();
+                runningBlackClock = stoppedBlackClock.start();
                 blackMove = activeBlackEngine.makeAndReadMove(whiteMove);
-                stoppedBlackClock = runningBlackClock2.stop();
+                stoppedBlackClock = runningBlackClock.stop();
                 logMove(blackMove, board);
                 updateGameState(blackMove, board, moves);
             }
@@ -204,20 +203,12 @@ public class GameServiceImpl implements GameService {
                                               final IdlingEngine whiteEngine,
                                               final IdlingEngine blackEngine,
                                               final IdlingEngine extraEngine) {
-        if (!extraEngine.features().playOther()) {
-            throw new IllegalArgumentException("Extra engine '" + extraEngine.myName() + "' does not support playother command");
-        }
         if (gameConfig.fen() != null) {
-            if (!whiteEngine.features().setboard()) {
-                throw new IllegalArgumentException("Engine '" + whiteEngine.myName() + "' does not support setboard command");
-            }
-            if (!blackEngine.features().setboard()) {
-                throw new IllegalArgumentException("Engine '" + blackEngine.myName() + "' does not support setboard command");
-            }
-            if (!extraEngine.features().setboard()) {
-                throw new IllegalArgumentException("Engine '" + extraEngine.myName() + "' does not support setboard command");
-            }
+            ensure(whiteEngine.features().setboard(), "Engine '%s' does not support setboard command", whiteEngine.myName());
+            ensure(blackEngine.features().setboard(), "Engine '%s' does not support setboard command", blackEngine.myName());
+            ensure(extraEngine.features().setboard(), "Engine '%s' does not support setboard command", extraEngine.myName());
         }
+        ensure(extraEngine.features().playOther(), "Extra engine '%s' does not support playother command", extraEngine.myName());
 
         LOGGER.log(INFO, "Starting new game with ''{0}'' as white and ''{1}'' as black. Using ''{2}'' as extra engine.",
                 whiteEngine.myName(), blackEngine.myName(), extraEngine.myName());
@@ -246,6 +237,8 @@ public class GameServiceImpl implements GameService {
 
         // Give engines some time to start
         ThreadUtils.sleepSilently(100);
+
+        // TODO: Support BLACK moving first here too.
 
         try {
             // First white move

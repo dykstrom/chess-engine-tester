@@ -16,30 +16,29 @@
 
 package se.dykstrom.cet.engine.util;
 
-import java.util.function.Predicate;
-
 public final class Args {
 
     private Args() { }
 
     /**
-     * Ensures that the given condition is true, and throws an exception with the given message if not.
+     * Ensures that the given condition is true, and throws an exception with the formatted message if not.
+     * The message may contain format specifiers as defined by {@link String#format}.
      */
-    public static void ensure(boolean condition, String message) {
+    public static void ensure(final boolean condition, final String message, final Object... args) {
         if (!condition) {
-            throw new IllegalArgumentException(message);
+            throw new IllegalArgumentException(String.format(message, args));
         }
     }
 
     /**
-     * Ensures that the given predicate is true when tested on the given value, and returns the value
-     * if that is the case. If the predicate is false, this method throws an exception.
+     * Ensures that the given condition is true, and returns the value if that is the case.
+     * If the condition is false, this method throws an exception with the given message.
      */
-    public static <T> T ensure(final T value, final Predicate<T> predicate) {
-        if (predicate.test(value)) {
+    public static <T> T ensure(final T value, final boolean condition, final String message) {
+        if (condition) {
             return value;
         } else {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(message);
         }
     }
 }

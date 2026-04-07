@@ -29,8 +29,8 @@ public abstract class AbstractChessClock implements ChessClock {
 
     protected AbstractChessClock(final TimeControl timeControl, final int moveNumber, final long timeLeft) {
         this.timeControl = requireNonNull(timeControl);
-        this.moveNumber = ensure(moveNumber, m -> m >= 0);
-        this.timeLeft = ensure(timeLeft, t -> t >= 0);
+        this.moveNumber = ensure(moveNumber, moveNumber >= 0, "moveNumber must be >= 0");
+        this.timeLeft = ensure(timeLeft, timeLeft >= 0, "timeLeft must be >= 0");
     }
 
     @Override
