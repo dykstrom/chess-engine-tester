@@ -57,10 +57,11 @@ class GameServiceImplTest {
     private static final TimeControl TIME_CONTROL = new IncrementalTimeControl(5, 0, 5);
     private static final GameConfig GAME_CONFIG = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL);
     private static final GameConfig GAME_CONFIG_WITH_FEN_FD = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_FRENCH_DEFENSE);
-    private static final GameConfig GAME_CONFIG_WITH_FEN_FM1 = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3_E5);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_FM = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3_E5);
 
     private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_YES = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").build();
     private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_NO = EngineFeatures.builder().myName(EXTRA_NAME).playOther("0").build();
+    private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_AND_SET_BOARD = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").setboard("1").build();
     private static final EngineFeatures WHITE_ENGINE_SET_BOARD_YES = EngineFeatures.builder().myName(WHITE_NAME).setboard("1").build();
     private static final EngineFeatures WHITE_ENGINE_SET_BOARD_NO = EngineFeatures.builder().myName(WHITE_NAME).setboard("0").build();
     private static final EngineFeatures BLACK_ENGINE_SET_BOARD_YES = EngineFeatures.builder().myName(BLACK_NAME).setboard("1").build();
@@ -122,7 +123,7 @@ class GameServiceImplTest {
         when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
 
         // When
-        final var playedGame = gameService.playGame(GAME_CONFIG_WITH_FEN_FM1, idlingWhiteEngineMock, idlingBlackEngineMock);
+        final var playedGame = gameService.playGame(GAME_CONFIG_WITH_FEN_FM, idlingWhiteEngineMock, idlingBlackEngineMock);
 
         // Then
         assertEquals(BLACK_WON, playedGame.result());
@@ -150,6 +151,41 @@ class GameServiceImplTest {
         assertEquals(3, playedGame.moves().size());
         assertEquals(FEN_FOOLS_MATE_FROM_BLACK, playedGame.moves().getFen());
         assertArrayEquals(new String[]{"e5", "g4", "Qh4#"}, playedGame.moves().toSanArray());
+    }
+
+    @Test
+    void shouldPlayFromPositionUntilTimeoutWithBlackMovingFirst() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; WHITE times out
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeWhiteEngine.readMove()).thenThrow(new TimeoutException("Timeout"));
+
+        // When
+        final var playedGame = gameService.playGame(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals("Time forfeit", playedGame.reason());
+    }
+
+    @Test
+    void shouldPlayFromPositionUntilIllegalMoveWithBlackMovingFirst() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; BLACK makes illegal move
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("e8e8");
+
+        // When
+        final var playedGame = gameService.playGame(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(WHITE_WON, playedGame.result());
+        assertEquals("Illegal move: e8e8", playedGame.reason());
     }
 
     @Test
@@ -247,9 +283,55 @@ class GameServiceImplTest {
         // Then
         assertEquals(BLACK_WON, playedGame.result());
         assertEquals(reason, playedGame.reason());
-        assertEquals("f3 e5 g4 Qh4#", playedGame.moves().toSan().strip());
+        assertArrayEquals(new String[]{"f3", "e5", "g4", "Qh4#"}, playedGame.moves().toSanArray());
         assertEquals("a5", playedGame.extraMoves().get(1));
         assertNull(playedGame.extraMoves().get(2));
+    }
+
+    @Test
+    void shouldPlayFromPositionWithExtraEngine() {
+        // Given: FEN after 1. f3 e5 where it's WHITE's turn; playing g4 Qh4# is Fool's Mate
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3_E5);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_PLAY_OTHER_AND_SET_BOARD);
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.readMove()).thenReturn("d8h4");
+        when(activeExtraEngine.readMove()).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+        when(forcedExtraEngineMock.playOther()).thenReturn(activeExtraEngine);
+
+        // When
+        final var playedGame = gameService.playGameWithExtraEngine(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(2, playedGame.moves().size());
+        assertEquals(FEN_F3_E5, playedGame.gameConfig().fen());
+    }
+
+    @Test
+    void shouldPlayFromPositionWithBlackMovingFirstWithExtraEngine() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; playing e5 g4 Qh4# is Fool's Mate
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_PLAY_OTHER_AND_SET_BOARD);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeExtraEngine.readMove()).thenReturn("a7a5", "b7b5");
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+        when(forcedExtraEngineMock.playOther()).thenReturn(activeExtraEngine);
+
+        // When
+        final var playedGame = gameService.playGameWithExtraEngine(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(3, playedGame.moves().size());
+        assertEquals("a5", playedGame.extraMoves().get(1));
+        assertEquals("b5", playedGame.extraMoves().get(2));
     }
 
     @Test

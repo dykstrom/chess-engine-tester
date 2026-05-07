@@ -38,6 +38,4 @@ public interface MatchService {
     PlayedMatch playMatch(final MatchConfig matchConfig,
                           final IdlingEngine engine1,
                           final IdlingEngine engine2);
-
-    void stopMatch();
 }

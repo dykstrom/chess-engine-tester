@@ -68,7 +68,7 @@ class MatchServiceImplIT {
 
         PlayedMatch playedMatch = null;
         try {
-            matchService.addGameListener((gameNumber, startTime, playedGame) -> matchCount.incrementAndGet());
+            matchService.addGameListener((_, _, _) -> matchCount.incrementAndGet());
             playedMatch = matchService.playMatch(matchConfig, engine1, engine2);
             assertEquals(matchConfig, playedMatch.matchConfig());
             assertEquals(NUMBER_OF_GAMES, playedMatch.results().size());

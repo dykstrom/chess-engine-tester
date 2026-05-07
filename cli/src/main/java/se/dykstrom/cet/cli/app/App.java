@@ -66,7 +66,8 @@ public class App implements Callable<Integer> {
 
     @Option(names = {"-3", "--engine3"},
             description = "Chess engine 3 config FILENAME. The optional third engine will shadow the engine playing black. " +
-                          "It will think about the same moves as the black engine, but its counter moves will only be logged, and not played.",
+                          "It will think about the same moves as the black engine, but its counter moves will only be logged, " +
+                          "and not played. Only available for single-game matches.",
             paramLabel = "FILENAME")
     private File engine3File;
 
@@ -162,15 +163,19 @@ public class App implements Callable<Integer> {
             spec.commandLine().getErr().println("Cannot read engine 2 file: " + e.getMessage());
             return ExitCode.SOFTWARE;
         }
-        try {
-            if (engine3File != null) {
-                engine3 = engineService.load(engine3File);
-            } else {
-                engine3 = null;
+        if (engine3File != null) {
+            if (numberOfGames != 1) {
+                spec.commandLine().getErr().println("Shadowing only available in single-game matches");
+                return ExitCode.USAGE;
             }
-        } catch (IOException e) {
-            spec.commandLine().getErr().println("Cannot read engine 3 file: " + e.getMessage());
-            return ExitCode.SOFTWARE;
+            try {
+                engine3 = engineService.load(engine3File);
+            } catch (IOException e) {
+                spec.commandLine().getErr().println("Cannot read engine 3 file: " + e.getMessage());
+                return ExitCode.SOFTWARE;
+            }
+        } else {
+            engine3 = null;
         }
 
         spec.commandLine().getOut().println("Starting match of " + numberOfGames + " game(s) between " +
@@ -223,7 +228,7 @@ public class App implements Callable<Integer> {
         var engine1Score = 0.0;
         var engine2Score = 0.0;
         final var builder = new StringBuilder();
-        builder.append(" ").append("-".repeat(totalWidth - 2)).append(" ").append(EOL);
+        builder.append(" ").repeat("-", totalWidth - 2).append(" ").append(EOL);
         for (var gameNumber = 1; gameNumber <= numberOfGames; gameNumber++) {
             final var result = results.get(gameNumber - 1);
             final var reason = reasons.get(gameNumber - 1);
@@ -247,7 +252,7 @@ public class App implements Callable<Integer> {
             engine1Score += (result == DRAW) ? 0.5 : 0.0;
             engine2Score += (result == DRAW) ? 0.5 : 0.0;
         }
-        builder.append(" ").append("-".repeat(totalWidth - 2)).append(" ").append(EOL);
+        builder.append(" ").repeat("-", totalWidth - 2).append(" ").append(EOL);
         builder.append("Final result:").append(EOL);
         builder.append(String.format(US, "%-20s : %2.1f", engine1, engine1Score)).append(EOL);
         builder.append(String.format(US, "%-20s : %2.1f", engine2, engine2Score));
@@ -262,7 +267,7 @@ public class App implements Callable<Integer> {
         return new CommandLine(this).execute(args);
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         System.exit(new App().execute(args));
     }
 }

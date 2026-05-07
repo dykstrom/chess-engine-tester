@@ -33,6 +33,4 @@ public interface GameService {
                                        final IdlingEngine whiteEngine,
                                        final IdlingEngine blackEngine,
                                        final IdlingEngine extraEngine);
-
-    void stopGame();
 }

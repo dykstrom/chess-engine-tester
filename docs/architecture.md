@@ -19,11 +19,11 @@ graph TD
     services --> engine
 ```
 
-| Module | Responsibility |
-|--------|---------------|
-| `engine` | State machine for engine lifecycle; XBoard protocol communication; time control definitions |
-| `services` | Coordinating single games and multi-game matches; chess clock; PGN file output |
-| `cli` | CLI argument parsing (Picocli); wiring all services together; displaying results |
+| Module     | Responsibility                                                                              |
+|------------|---------------------------------------------------------------------------------------------|
+| `engine`   | State machine for engine lifecycle; XBoard protocol communication; time control definitions |
+| `services` | Coordinating single games and multi-game matches; chess clock; PGN file output              |
+| `cli`      | CLI argument parsing (Picocli); wiring all services together; displaying results            |
 
 **Key external libraries:** chesslib (move validation and board state), Picocli (CLI), Jackson (JSON config), JUnit 5 + Mockito (testing).
 
@@ -114,17 +114,17 @@ sequenceDiagram
 
 ## Key Abstractions
 
-| Abstraction | Where | Purpose |
-|-------------|-------|---------|
-| `Engine` | `engine` | Base interface implemented by all state records |
-| `EngineProcess` | `engine` | Isolates OS subprocess I/O; mocked in unit tests |
-| `TimeControl` | `engine` | Sealed interface — `ClassicTimeControl` (moves/period) or `IncrementalTimeControl` (base + increment) |
-| `ChessClock` | `services` | Two-state clock — `RunningChessClock` / `StoppedChessClock` |
-| `GameListener` | `services` | Observer notified after each game; implemented by `ProgressBarWriter` and `PgnFileWriter` |
-| `GameConfig` | `engine` | Record: white name, black name, `TimeControl` |
-| `MatchConfig` | `services` | Record: number of games, `TimeControl` |
-| `PlayedGame` | `services` | Result of one game including moves and termination reason |
-| `PlayedMatch` | `services` | Aggregated match result across all games |
+| Abstraction     | Where      | Purpose                                                                                               |
+|-----------------|------------|-------------------------------------------------------------------------------------------------------|
+| `Engine`        | `engine`   | Base interface implemented by all state records                                                       |
+| `EngineProcess` | `engine`   | Isolates OS subprocess I/O; mocked in unit tests                                                      |
+| `TimeControl`   | `engine`   | Sealed interface — `ClassicTimeControl` (moves/period) or `IncrementalTimeControl` (base + increment) |
+| `ChessClock`    | `services` | Two-state clock — `RunningChessClock` / `StoppedChessClock`                                           |
+| `GameListener`  | `services` | Observer notified after each game; implemented by `ProgressBarWriter` and `PgnFileWriter`             |
+| `GameConfig`    | `engine`   | Record: white name, black name, `TimeControl`                                                         |
+| `MatchConfig`   | `services` | Record: number of games, `TimeControl`                                                                |
+| `PlayedGame`    | `services` | Result of one game including moves and termination reason                                             |
+| `PlayedMatch`   | `services` | Aggregated match result across all games                                                              |
 
 ---
 

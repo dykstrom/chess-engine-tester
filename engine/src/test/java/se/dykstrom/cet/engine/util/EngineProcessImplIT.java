@@ -71,6 +71,6 @@ class EngineProcessImplIT {
         startedProcess.shutDown();
 
         // Then
-        assertTrue(output.get(0).startsWith("# Ronja"));
+        assertTrue(output.getFirst().startsWith("# Ronja"));
     }
 }

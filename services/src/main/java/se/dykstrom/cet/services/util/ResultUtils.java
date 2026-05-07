@@ -29,24 +29,24 @@ public final class ResultUtils {
     private ResultUtils() { }
 
     /**
-     * This method is called when an engine has received an illegal move or invalid command,
-     * or when an engine has detected checkmate or draw, which means the move has already been made,
-     * and the side to move is not the one to blame.
+     * This method is called when an engine has received an illegal move or invalid command.
+     * It is also called when an engine has detected checkmate or draw, which means the move
+     * has already been made, and the side to move is not the one to blame.
      * <p>
      * Note that it is uncertain if we ever end up here, because ChessLib will have detected
      * the same problem before the move was actually made.
      */
     public static Result createEngineResult(final Board board, final Response response) {
-        final var side = board.getSideToMove();
-        if (response instanceof Result result) {
-            return createNormalResult(board, result);
-        } else if (response instanceof IllegalMove illegalMove) {
-            return createIllegalMoveResult(board, illegalMove);
-        } else if (response instanceof InvalidCommand invalidCommand) {
-            return new Result("*", side + " received an invalid command: " + invalidCommand.text());
-        } else {
-            throw new IllegalArgumentException("unsupported response: " + response);
-        }
+        return switch (response) {
+            case Result result -> createNormalResult(board, result);
+            case IllegalMove illegalMove -> createIllegalMoveResult(board, illegalMove);
+            case InvalidCommand invalidCommand -> createInvalidCommandResult(board, invalidCommand);
+            default -> throw new IllegalArgumentException("unsupported response: " + response);
+        };
+    }
+
+    private static Result createInvalidCommandResult(final Board board, final InvalidCommand invalidCommand) {
+        return new Result("*", board.getSideToMove() + " received an invalid command: " + invalidCommand.text());
     }
 
     private static Result createNormalResult(final Board board, final Result result) {

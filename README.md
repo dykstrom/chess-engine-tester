@@ -3,7 +3,6 @@
 <div style="text-align: left">
 
 [![Build](https://github.com/dykstrom/chess-engine-tester/actions/workflows/build.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/build.yml)
-[![Release](https://github.com/dykstrom/chess-engine-tester/actions/workflows/release.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/release.yml)
 [![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)](https://github.com/dykstrom/chess-engine-tester/issues)
 [![Latest Release](https://img.shields.io/github/v/release/dykstrom/chess-engine-tester?display_name=release)](https://github.com/dykstrom/chess-engine-tester/releases)
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/chess-engine-tester/total)

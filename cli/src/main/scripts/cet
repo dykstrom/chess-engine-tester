@@ -18,4 +18,4 @@ fi
 JVM_ARGS="-Djava.util.logging.config.file=logging.properties"
 JAR_FILE="cli-${project.version}.jar"
 
-${JAVA_CMD} ${JVM_ARGS} -jar ${JAR_FILE} $*
+${JAVA_CMD} ${JVM_ARGS} -jar ${JAR_FILE} "$@"

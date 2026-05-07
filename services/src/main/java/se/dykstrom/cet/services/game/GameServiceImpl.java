@@ -56,6 +56,8 @@ public class GameServiceImpl implements GameService {
 
     private final AtomicBoolean playing = new AtomicBoolean(false);
 
+    private record SideState(String move, StoppedChessClock clock, ActiveEngine engine) {}
+
     @Override
     public PlayedGame playGame(final GameConfig gameConfig,
                                final IdlingEngine whiteEngine,
@@ -77,102 +79,68 @@ public class GameServiceImpl implements GameService {
         }
         final var moves = gameConfig.fen() == null ? new MoveList() : new MoveList(gameConfig.fen());
 
-        // Engine states
-        final ForcedEngine forcedWhiteEngine = whiteEngine.start(gameConfig);
-        final ForcedEngine forcedBlackEngine = blackEngine.start(gameConfig);
-        ActiveEngine activeWhiteEngine = null;
-        ActiveEngine activeBlackEngine = null;
+        // Initial engine states
+        final var forcedWhiteEngine = whiteEngine.start(gameConfig);
+        final var forcedBlackEngine = blackEngine.start(gameConfig);
 
-        // Chess clocks
-        var stoppedWhiteClock = new StoppedChessClock(gameConfig.timeControl());
-        var stoppedBlackClock = new StoppedChessClock(gameConfig.timeControl());
+        // Initial chess clocks
+        final var initialWhiteClock = new StoppedChessClock(gameConfig.timeControl());
+        final var initialBlackClock = new StoppedChessClock(gameConfig.timeControl());
+
+        // Per-side state (carry clock, active engine, and last move across iterations)
+        SideState ws = null;
+        SideState bs = null;
 
         // Give engines some time to start
         ThreadUtils.sleepSilently(100);
 
         try {
-            String whiteMove;
-            String blackMove;
-
-            // TODO: Refactor the if statement.
-
             if (board.getSideToMove() == WHITE) {
-                // First white move
-                forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-                forcedWhiteEngine.clear();
-                var runningWhiteClock = stoppedWhiteClock.start();
-                activeWhiteEngine = forcedWhiteEngine.go();
-                whiteMove = activeWhiteEngine.readMove();
-                stoppedWhiteClock = runningWhiteClock.stop();
-                logMove(whiteMove, board);
-                updateGameState(whiteMove, board, moves);
+                // White opens
+                ws = makeFirstMove(forcedWhiteEngine, initialWhiteClock, initialBlackClock, null);
+                logMove(ws.move(), board);
+                updateGameState(ws.move(), board, moves);
 
-                // First black move
-                logMove(whiteMove, board, false);
-                forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                forcedBlackEngine.clear();
-                forcedBlackEngine.makeMove(whiteMove);
-                var runningBlackClock = stoppedBlackClock.start();
-                activeBlackEngine = forcedBlackEngine.go();
-                blackMove = activeBlackEngine.readMove();
-                stoppedBlackClock = runningBlackClock.stop();
-                logMove(blackMove, board);
-                updateGameState(blackMove, board, moves);
+                // Black responds
+                logMove(ws.move(), board, false);
+                bs = makeFirstMove(forcedBlackEngine, initialBlackClock, ws.clock(), ws.move());
+                logMove(bs.move(), board);
+                updateGameState(bs.move(), board, moves);
             } else {
-                // First black move (black starts per FEN)
-                forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                forcedBlackEngine.clear();
-                var runningBlackClock = stoppedBlackClock.start();
-                activeBlackEngine = forcedBlackEngine.go();
-                blackMove = activeBlackEngine.readMove();
-                stoppedBlackClock = runningBlackClock.stop();
-                logMove(blackMove, board);
-                updateGameState(blackMove, board, moves);
+                // Black opens
+                bs = makeFirstMove(forcedBlackEngine, initialBlackClock, initialWhiteClock, null);
+                logMove(bs.move(), board);
+                updateGameState(bs.move(), board, moves);
 
-                // First white move (responding to black's opening move)
-                logMove(blackMove, board, true);
-                forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-                forcedWhiteEngine.clear();
-                forcedWhiteEngine.makeMove(blackMove);
-                var runningWhiteClock = stoppedWhiteClock.start();
-                activeWhiteEngine = forcedWhiteEngine.go();
-                whiteMove = activeWhiteEngine.readMove();
-                stoppedWhiteClock = runningWhiteClock.stop();
-                logMove(whiteMove, board);
-                updateGameState(whiteMove, board, moves);
+                // White responds
+                logMove(bs.move(), board, true);
+                ws = makeFirstMove(forcedWhiteEngine, initialWhiteClock, bs.clock(), bs.move());
+                logMove(ws.move(), board);
+                updateGameState(ws.move(), board, moves);
 
-                // Black responds to white's first move (sets up blackMove for the loop)
-                logMove(whiteMove, board, false);
-                activeBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                runningBlackClock = stoppedBlackClock.start();
-                blackMove = activeBlackEngine.makeAndReadMove(whiteMove);
-                stoppedBlackClock = runningBlackClock.stop();
-                logMove(blackMove, board);
-                updateGameState(blackMove, board, moves);
+                // Black responds to white (sets up bs for the loop)
+                logMove(ws.move(), board, false);
+                bs = makeNextMove(bs.engine(), bs.clock(), ws.clock(), ws.move());
+                logMove(bs.move(), board);
+                updateGameState(bs.move(), board, moves);
             }
 
             while (playing.get()) {
-                logMove(blackMove, board, true);
-                activeWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-                var runningWhiteClock = stoppedWhiteClock.start();
-                whiteMove = activeWhiteEngine.makeAndReadMove(blackMove);
-                stoppedWhiteClock = runningWhiteClock.stop();
-                logMove(whiteMove, board);
-                updateGameState(whiteMove, board, moves);
+                logMove(bs.move(), board, true);
+                ws = makeNextMove(ws.engine(), ws.clock(), bs.clock(), bs.move());
+                logMove(ws.move(), board);
+                updateGameState(ws.move(), board, moves);
 
-                logMove(whiteMove, board, false);
-                activeBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                var runningBlackClock = stoppedBlackClock.start();
-                blackMove = activeBlackEngine.makeAndReadMove(whiteMove);
-                stoppedBlackClock = runningBlackClock.stop();
-                logMove(blackMove, board);
-                updateGameState(blackMove, board, moves);
+                logMove(ws.move(), board, false);
+                bs = makeNextMove(bs.engine(), bs.clock(), ws.clock(), ws.move());
+                logMove(bs.move(), board);
+                updateGameState(bs.move(), board, moves);
             }
         } catch (UnexpectedException e) {
             LOGGER.log(INFO, "Unexpected response from " + board.getSideToMove() + " engine on move " + board.getMoveCounter() + ": " + e.response());
             finalResult = createEngineResult(board, e.response());
         } catch (ChessLibIllegalException e) {
-            LOGGER.log(INFO, "Illegal move detected on move " + board.getMoveCounter() + ": " + e.getMessage());
+            LOGGER.log(INFO, "Illegal move " + e.move() + " detected on move " + board.getMoveCounter() + ": " + e.getMessage());
             finalResult = createIllegalMoveResult(board, e.getMessage(), e.move());
         } catch (ChessLibDrawException e) {
             LOGGER.log(INFO, "Draw detected on move " + board.getMoveCounter() + ": " + e.getMessage());
@@ -182,15 +150,15 @@ public class GameServiceImpl implements GameService {
             finalResult = createTimeoutResult(board);
         } finally {
             postFinalResult(finalResult,
-                    forcedWhiteEngine, activeWhiteEngine,
-                    forcedBlackEngine, activeBlackEngine,
+                    forcedWhiteEngine, ws != null ? ws.engine() : null,
+                    forcedBlackEngine, bs != null ? bs.engine() : null,
                     null, null);
         }
 
         return new PlayedGame(
                 gameConfig,
-                stopEngine(activeWhiteEngine, forcedWhiteEngine),
-                stopEngine(activeBlackEngine, forcedBlackEngine),
+                stopEngine(ws != null ? ws.engine() : null, forcedWhiteEngine),
+                stopEngine(bs != null ? bs.engine() : null, forcedBlackEngine),
                 null,
                 GameResult.fromNotation(finalResult.code()),
                 finalResult.text(),
@@ -223,87 +191,97 @@ public class GameServiceImpl implements GameService {
         final var moves = gameConfig.fen() == null ? new MoveList() : new MoveList(gameConfig.fen());
         final var extraMoves = new HashMap<Integer, String>();
 
-        // Engine states
-        final ForcedEngine forcedWhiteEngine = whiteEngine.start(gameConfig);
-        final ForcedEngine forcedBlackEngine = blackEngine.start(gameConfig);
-        final ForcedEngine forcedExtraEngine = extraEngine.start(gameConfig.withBlack(extraEngine.myName()));
-        ActiveEngine activeWhiteEngine = null;
-        ActiveEngine activeBlackEngine = null;
+        // Initial engine states
+        final var forcedWhiteEngine = whiteEngine.start(gameConfig);
+        final var forcedBlackEngine = blackEngine.start(gameConfig);
+        final var forcedExtraEngine = extraEngine.start(gameConfig.withBlack(extraEngine.myName()));
         ActiveEngine activeExtraEngine = null;
 
-        // Chess clocks
-        var stoppedWhiteClock = new StoppedChessClock(gameConfig.timeControl());
-        var stoppedBlackClock = new StoppedChessClock(gameConfig.timeControl());
+        // Initial chess clocks
+        final var initialWhiteClock = new StoppedChessClock(gameConfig.timeControl());
+        final var initialBlackClock = new StoppedChessClock(gameConfig.timeControl());
+
+        // Per-side state (carry clock, active engine, and last move across iterations)
+        SideState ws = null;
+        SideState bs = null;
 
         // Give engines some time to start
         ThreadUtils.sleepSilently(100);
 
-        // TODO: Support BLACK moving first here too.
-
         try {
-            // First white move
-            forcedWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-            forcedWhiteEngine.clear();
-            var runningWhiteClock = stoppedWhiteClock.start();
-            activeWhiteEngine = forcedWhiteEngine.go();
-            var whiteMove = activeWhiteEngine.readMove();
-            stoppedWhiteClock = runningWhiteClock.stop();
-            logMove(whiteMove, board);
-            updateGameState(whiteMove, board, moves);
+            if (board.getSideToMove() == WHITE) {
+                // White opens
+                ws = makeFirstMove(forcedWhiteEngine, initialWhiteClock, initialBlackClock, null);
+                logMove(ws.move(), board);
+                updateGameState(ws.move(), board, moves);
 
-            // First black move
-            logMove(whiteMove, board, false);
-            logMove(EXTRA_ENGINE, whiteMove, board, false);
-            // Extra engine
-            forcedExtraEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-            forcedExtraEngine.clear();
-            forcedExtraEngine.makeMove(whiteMove);
-            activeExtraEngine = forcedExtraEngine.go();
-            // Black engine
-            forcedBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-            forcedBlackEngine.clear();
-            forcedBlackEngine.makeMove(whiteMove);
-            var runningBlackClock = stoppedBlackClock.start();
-            activeBlackEngine = forcedBlackEngine.go();
-            var blackMove = activeBlackEngine.readMove();
-            stoppedBlackClock = runningBlackClock.stop();
-            logMove(blackMove, board);
-            // Extra engine
+                // Extra engine + Black respond to white's move
+                logMove(ws.move(), board, false);
+                logMove(EXTRA_ENGINE, ws.move(), board, false);
+                forcedExtraEngine.postTime(initialBlackClock.timeLeft(), ws.clock().timeLeft());
+                forcedExtraEngine.clear();
+                forcedExtraEngine.makeMove(ws.move());
+                activeExtraEngine = forcedExtraEngine.go();
+                bs = makeFirstMove(forcedBlackEngine, initialBlackClock, ws.clock(), ws.move());
+                logMove(bs.move(), board);
+            } else {
+                // Extra engine + Black opens
+                forcedExtraEngine.postTime(initialBlackClock.timeLeft(), initialWhiteClock.timeLeft());
+                forcedExtraEngine.clear();
+                activeExtraEngine = forcedExtraEngine.go();
+                bs = makeFirstMove(forcedBlackEngine, initialBlackClock, initialWhiteClock, null);
+                logMove(bs.move(), board);
+
+                // Extra engine comparison (board still in pre-blackMove state)
+                var extraMove = activeExtraEngine.readMove();
+                logMove(EXTRA_ENGINE, extraMove, board);
+                compareAndLog(bs.move(), extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
+                activeExtraEngine = resetExtraEngineAndForceBlackMove(activeExtraEngine, gameConfig, bs.move());
+                updateGameState(bs.move(), board, moves);
+
+                // White responds
+                logMove(bs.move(), board, true);
+                ws = makeFirstMove(forcedWhiteEngine, initialWhiteClock, bs.clock(), bs.move());
+                logMove(ws.move(), board);
+                updateGameState(ws.move(), board, moves);
+
+                // Extra engine + Black respond to white's move (sets up bs for the loop)
+                logMove(ws.move(), board, false);
+                logMove(EXTRA_ENGINE, ws.move(), board, false);
+                activeExtraEngine.postTime(bs.clock().timeLeft(), ws.clock().timeLeft());
+                activeExtraEngine.makeMove(ws.move());
+                bs = makeNextMove(bs.engine(), bs.clock(), ws.clock(), ws.move());
+                logMove(bs.move(), board);
+            }
+
+            // Extra engine comparison (board still in pre-blackMove state)
             var extraMove = activeExtraEngine.readMove();
             logMove(EXTRA_ENGINE, extraMove, board);
-            compareAndLog(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
-            activeExtraEngine = takeBackExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
-            // Black engine
-            updateGameState(blackMove, board, moves);
-            
-            while (playing.get()) {
-                logMove(blackMove, board, true);
-                // White engine
-                activeWhiteEngine.postTime(stoppedWhiteClock.timeLeft(), stoppedBlackClock.timeLeft());
-                runningWhiteClock = stoppedWhiteClock.start();
-                whiteMove = activeWhiteEngine.makeAndReadMove(blackMove);
-                stoppedWhiteClock = runningWhiteClock.stop();
-                logMove(whiteMove, board);
-                updateGameState(whiteMove, board, moves);
+            compareAndLog(bs.move(), extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
+            activeExtraEngine = takeBackExtraMoveAndForceBlackMove(activeExtraEngine, ws.move(), bs.move());
+            updateGameState(bs.move(), board, moves);
 
-                logMove(whiteMove, board, false);
-                logMove(EXTRA_ENGINE, whiteMove, board, false);
-                // Extra engine
-                activeExtraEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                activeExtraEngine.makeMove(whiteMove);
-                // Black engine
-                activeBlackEngine.postTime(stoppedBlackClock.timeLeft(), stoppedWhiteClock.timeLeft());
-                runningBlackClock = stoppedBlackClock.start();
-                blackMove = activeBlackEngine.makeAndReadMove(whiteMove);
-                stoppedBlackClock = runningBlackClock.stop();
-                logMove(blackMove, board);
-                // Extra engine
+            while (playing.get()) {
+                // White move
+                logMove(bs.move(), board, true);
+                ws = makeNextMove(ws.engine(), ws.clock(), bs.clock(), bs.move());
+                logMove(ws.move(), board);
+                updateGameState(ws.move(), board, moves);
+
+                // Extra engine + Black respond to white's move
+                logMove(ws.move(), board, false);
+                logMove(EXTRA_ENGINE, ws.move(), board, false);
+                activeExtraEngine.postTime(bs.clock().timeLeft(), ws.clock().timeLeft());
+                activeExtraEngine.makeMove(ws.move());
+                bs = makeNextMove(bs.engine(), bs.clock(), ws.clock(), ws.move());
+                logMove(bs.move(), board);
+
+                // Extra engine comparison (board still in pre-blackMove state)
                 extraMove = activeExtraEngine.readMove();
                 logMove(EXTRA_ENGINE, extraMove, board);
-                compareAndLog(blackMove, extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
-                activeExtraEngine = takeBackExtraMoveAndForceBlackMove(activeExtraEngine, whiteMove, blackMove);
-                // Black engine
-                updateGameState(blackMove, board, moves);
+                compareAndLog(bs.move(), extraMove).ifPresent(move -> updateExtraMoves(move, board, moves, extraMoves));
+                activeExtraEngine = takeBackExtraMoveAndForceBlackMove(activeExtraEngine, ws.move(), bs.move());
+                updateGameState(bs.move(), board, moves);
             }
         } catch (UnexpectedException e) {
             LOGGER.log(INFO, "Unexpected response from " + board.getSideToMove() + " engine on move " + board.getMoveCounter() + ": " + e.response());
@@ -319,15 +297,15 @@ public class GameServiceImpl implements GameService {
             finalResult = createTimeoutResult(board);
         } finally {
             postFinalResult(finalResult,
-                    forcedWhiteEngine, activeWhiteEngine,
-                    forcedBlackEngine, activeBlackEngine,
+                    forcedWhiteEngine, ws != null ? ws.engine() : null,
+                    forcedBlackEngine, bs != null ? bs.engine() : null,
                     forcedExtraEngine, activeExtraEngine);
         }
 
         return new PlayedGame(
                 gameConfig,
-                stopEngine(activeWhiteEngine, forcedWhiteEngine),
-                stopEngine(activeBlackEngine, forcedBlackEngine),
+                stopEngine(ws != null ? ws.engine() : null, forcedWhiteEngine),
+                stopEngine(bs != null ? bs.engine() : null, forcedBlackEngine),
                 stopEngine(activeExtraEngine, forcedExtraEngine),
                 GameResult.fromNotation(finalResult.code()),
                 finalResult.text(),
@@ -335,6 +313,45 @@ public class GameServiceImpl implements GameService {
                 extraMoves);
     }
 
+    /**
+     * Makes the first move for an engine, transitioning it from forced to active state.
+     * If {@code incomingMove} is non-null, the engine receives that move before thinking.
+     */
+    private SideState makeFirstMove(final ForcedEngine forcedEngine,
+                                    final StoppedChessClock myClock,
+                                    final StoppedChessClock theirClock,
+                                    final String incomingMove) {
+        forcedEngine.postTime(myClock.timeLeft(), theirClock.timeLeft());
+        forcedEngine.clear();
+        if (incomingMove != null) {
+            forcedEngine.makeMove(incomingMove);
+        }
+        final var runningClock = myClock.start();
+        final var activeEngine = forcedEngine.go();
+        final var move = activeEngine.readMove();
+        final var stoppedClock = runningClock.stop();
+        return new SideState(move, stoppedClock, activeEngine);
+    }
+
+    /**
+     * Makes the next move for an already-active engine.
+     */
+    private SideState makeNextMove(final ActiveEngine activeEngine,
+                                   final StoppedChessClock myClock,
+                                   final StoppedChessClock theirClock,
+                                   final String incomingMove) {
+        activeEngine.postTime(myClock.timeLeft(), theirClock.timeLeft());
+        final var runningClock = myClock.start();
+        final var move = activeEngine.makeAndReadMove(incomingMove);
+        final var stoppedClock = runningClock.stop();
+        return new SideState(move, stoppedClock, activeEngine);
+    }
+
+    /**
+     * Resynchronizes the extra engine after its predicted move has been compared to black's actual
+     * move. Forces the engine, takes back its predicted move, then replays {@code whiteMove} and
+     * {@code blackMove} so the extra engine reflects the real game state before the next white move.
+     */
     private ActiveEngine takeBackExtraMoveAndForceBlackMove(final ActiveEngine activeExtraEngine,
                                                             final String whiteMove,
                                                             final String blackMove) {
@@ -345,7 +362,27 @@ public class GameServiceImpl implements GameService {
             forcedExtraEngine.makeMove(blackMove);
             return forcedExtraEngine.playOther();
         } catch (UnexpectedException e) {
-            LOGGER.log(WARNING, "Ignoring unexpected response from extra engine: " + e.response());
+            LOGGER.log(WARNING, "Ignoring unexpected response from extra engine: {0}", e.response());
+            return activeExtraEngine;
+        }
+    }
+
+    /**
+     * Resynchronizes the extra engine when black opens. Because there is no preceding white move to
+     * take back to, the engine is fully stopped and restarted, then {@code blackMove} is replayed so
+     * the extra engine reflects the real game state before white's first move.
+     */
+    private ActiveEngine resetExtraEngineAndForceBlackMove(final ActiveEngine activeExtraEngine,
+                                                           final GameConfig gameConfig,
+                                                           final String blackMove) {
+        try {
+            ForcedEngine forcedExtraEngine = activeExtraEngine.force();
+            IdlingEngine idlingExtraEngine = forcedExtraEngine.stop();
+            forcedExtraEngine = idlingExtraEngine.start(gameConfig.withBlack(idlingExtraEngine.myName()));
+            forcedExtraEngine.makeMove(blackMove);
+            return forcedExtraEngine.playOther();
+        } catch (UnexpectedException e) {
+            LOGGER.log(WARNING, "Ignoring unexpected response from extra engine: {0}", e.response());
             return activeExtraEngine;
         }
     }
@@ -362,11 +399,6 @@ public class GameServiceImpl implements GameService {
         } else {
             return Optional.empty();
         }
-    }
-
-    @Override
-    public void stopGame() {
-        playing.set(false);
     }
 
     private void updateExtraMoves(final String canMove,
@@ -460,7 +492,7 @@ public class GameServiceImpl implements GameService {
                                  final ActiveEngine activeBlackEngine,
                                  final ForcedEngine forcedExtraEngine,
                                  final ActiveEngine activeExtraEngine) {
-        LOGGER.log(INFO, "Final result: " + finalResult.code() + " {" + finalResult.text() + "}");
+        LOGGER.log(INFO, "Final result: {0} ({1})", finalResult.code(), finalResult.text());
         postResult(finalResult, activeWhiteEngine, forcedWhiteEngine);
         postResult(finalResult, activeBlackEngine, forcedBlackEngine);
         postResult(finalResult, activeExtraEngine, forcedExtraEngine);
