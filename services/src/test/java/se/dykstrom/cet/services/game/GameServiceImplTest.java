@@ -33,6 +33,7 @@ import se.dykstrom.cet.services.exception.TimeoutException;
 import static com.github.bhlangonijr.chesslib.game.GameResult.BLACK_WON;
 import static com.github.bhlangonijr.chesslib.game.GameResult.DRAW;
 import static com.github.bhlangonijr.chesslib.game.GameResult.WHITE_WON;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -46,10 +47,25 @@ class GameServiceImplTest {
     private static final String BLACK_NAME = "BlackEngine";
     private static final String EXTRA_NAME = "ExtraEngine";
 
+    private static final String FEN_FRENCH_DEFENSE = "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+    private static final String FEN_F3 = "rnbqkbnr/pppppppp/8/8/8/5P2/PPPPP1PP/RNBQKBNR b KQkq - 0 1";
+    private static final String FEN_F3_E5 = "rnbqkbnr/pppp1ppp/8/4p3/8/5P2/PPPPP1PP/RNBQKBNR w KQkq e6 0 1";
+    private static final String FEN_FOOLS_MATE = "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 2";
+    // Fool's Mate position reached from FEN_F3 (fullmove counter is 3, not 2)
+    private static final String FEN_FOOLS_MATE_FROM_BLACK = "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3";
+
     private static final TimeControl TIME_CONTROL = new IncrementalTimeControl(5, 0, 5);
     private static final GameConfig GAME_CONFIG = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_FD = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_FRENCH_DEFENSE);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_FM = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3_E5);
+
     private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_YES = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").build();
     private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_NO = EngineFeatures.builder().myName(EXTRA_NAME).playOther("0").build();
+    private static final EngineFeatures EXTRA_ENGINE_PLAY_OTHER_AND_SET_BOARD = EngineFeatures.builder().myName(EXTRA_NAME).playOther("1").setboard("1").build();
+    private static final EngineFeatures WHITE_ENGINE_SET_BOARD_YES = EngineFeatures.builder().myName(WHITE_NAME).setboard("1").build();
+    private static final EngineFeatures WHITE_ENGINE_SET_BOARD_NO = EngineFeatures.builder().myName(WHITE_NAME).setboard("0").build();
+    private static final EngineFeatures BLACK_ENGINE_SET_BOARD_YES = EngineFeatures.builder().myName(BLACK_NAME).setboard("1").build();
+    private static final EngineFeatures BLACK_ENGINE_SET_BOARD_NO = EngineFeatures.builder().myName(BLACK_NAME).setboard("0").build();
 
     private final IdlingEngine idlingWhiteEngineMock = mock(IdlingEngine.class);
     private final IdlingEngine idlingBlackEngineMock = mock(IdlingEngine.class);
@@ -95,6 +111,81 @@ class GameServiceImplTest {
 
         // Then
         assertEquals(BLACK_WON, playedGame.result());
+    }
+
+    @Test
+    void shouldPlayFromPosition() {
+        // Given
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.readMove()).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+
+        // When
+        final var playedGame = gameService.playGame(GAME_CONFIG_WITH_FEN_FM, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(2, playedGame.moves().size());
+        assertEquals(FEN_FOOLS_MATE, playedGame.moves().getFen());
+        assertArrayEquals(new String[]{"g4", "Qh4#"}, playedGame.moves().toSanArray());
+    }
+
+    @Test
+    void shouldPlayFromPositionWithBlackMovingFirst() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; playing e5 g4 Qh4# is Fool's Mate
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+
+        // When
+        final var playedGame = gameService.playGame(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(3, playedGame.moves().size());
+        assertEquals(FEN_FOOLS_MATE_FROM_BLACK, playedGame.moves().getFen());
+        assertArrayEquals(new String[]{"e5", "g4", "Qh4#"}, playedGame.moves().toSanArray());
+    }
+
+    @Test
+    void shouldPlayFromPositionUntilTimeoutWithBlackMovingFirst() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; WHITE times out
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeWhiteEngine.readMove()).thenThrow(new TimeoutException("Timeout"));
+
+        // When
+        final var playedGame = gameService.playGame(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals("Time forfeit", playedGame.reason());
+    }
+
+    @Test
+    void shouldPlayFromPositionUntilIllegalMoveWithBlackMovingFirst() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; BLACK makes illegal move
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("e8e8");
+
+        // When
+        final var playedGame = gameService.playGame(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock);
+
+        // Then
+        assertEquals(WHITE_WON, playedGame.result());
+        assertEquals("Illegal move: e8e8", playedGame.reason());
     }
 
     @Test
@@ -192,9 +283,55 @@ class GameServiceImplTest {
         // Then
         assertEquals(BLACK_WON, playedGame.result());
         assertEquals(reason, playedGame.reason());
-        assertEquals("f3 e5 g4 Qh4#", playedGame.moves().toSan().strip());
+        assertArrayEquals(new String[]{"f3", "e5", "g4", "Qh4#"}, playedGame.moves().toSanArray());
         assertEquals("a5", playedGame.extraMoves().get(1));
         assertNull(playedGame.extraMoves().get(2));
+    }
+
+    @Test
+    void shouldPlayFromPositionWithExtraEngine() {
+        // Given: FEN after 1. f3 e5 where it's WHITE's turn; playing g4 Qh4# is Fool's Mate
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3_E5);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_PLAY_OTHER_AND_SET_BOARD);
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.readMove()).thenReturn("d8h4");
+        when(activeExtraEngine.readMove()).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+        when(forcedExtraEngineMock.playOther()).thenReturn(activeExtraEngine);
+
+        // When
+        final var playedGame = gameService.playGameWithExtraEngine(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(2, playedGame.moves().size());
+        assertEquals(FEN_F3_E5, playedGame.gameConfig().fen());
+    }
+
+    @Test
+    void shouldPlayFromPositionWithBlackMovingFirstWithExtraEngine() {
+        // Given: FEN after 1. f3 where it's BLACK's turn; playing e5 g4 Qh4# is Fool's Mate
+        final var gameConfig = new GameConfig(WHITE_NAME, BLACK_NAME, TIME_CONTROL, FEN_F3);
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_YES);
+        when(idlingExtraEngineMock.features()).thenReturn(EXTRA_ENGINE_PLAY_OTHER_AND_SET_BOARD);
+        when(activeBlackEngine.readMove()).thenReturn("e7e5");
+        when(activeExtraEngine.readMove()).thenReturn("a7a5", "b7b5");
+        when(activeWhiteEngine.readMove()).thenReturn("g2g4");
+        when(activeBlackEngine.makeAndReadMove("g2g4")).thenReturn("d8h4");
+        when(activeWhiteEngine.makeAndReadMove("d8h4")).thenThrow(new UnexpectedException(new Result("0-1", "Black mates")));
+        when(forcedExtraEngineMock.playOther()).thenReturn(activeExtraEngine);
+
+        // When
+        final var playedGame = gameService.playGameWithExtraEngine(gameConfig, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock);
+
+        // Then
+        assertEquals(BLACK_WON, playedGame.result());
+        assertEquals(3, playedGame.moves().size());
+        assertEquals("a5", playedGame.extraMoves().get(1));
+        assertEquals("b5", playedGame.extraMoves().get(2));
     }
 
     @Test
@@ -206,6 +343,33 @@ class GameServiceImplTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> gameService.playGameWithExtraEngine(GAME_CONFIG, idlingWhiteEngineMock, idlingBlackEngineMock, idlingExtraEngineMock)
+        );
+    }
+
+    @Test
+    void whiteEngineDoesNotSupportSetboard() {
+        // Given
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_NO);
+        when(idlingWhiteEngineMock.myName()).thenReturn(WHITE_NAME);
+
+        // When & Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> gameService.playGame(GAME_CONFIG_WITH_FEN_FD, idlingWhiteEngineMock, idlingBlackEngineMock)
+        );
+    }
+
+    @Test
+    void blackEngineDoesNotSupportSetboard() {
+        // Given
+        when(idlingWhiteEngineMock.features()).thenReturn(WHITE_ENGINE_SET_BOARD_YES);
+        when(idlingBlackEngineMock.features()).thenReturn(BLACK_ENGINE_SET_BOARD_NO);
+        when(idlingBlackEngineMock.myName()).thenReturn(BLACK_NAME);
+
+        // When & Then
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> gameService.playGame(GAME_CONFIG_WITH_FEN_FD, idlingWhiteEngineMock, idlingBlackEngineMock)
         );
     }
 }

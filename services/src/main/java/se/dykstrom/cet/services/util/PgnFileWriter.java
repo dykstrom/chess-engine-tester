@@ -58,6 +58,9 @@ public record PgnFileWriter(File outputFile, FileService fileService) implements
             lines.add(tag("PlyCount", game.moves().size()));
             lines.add(tag("Time", TIME_FORMATTER.format(startTime)));
             lines.add(tag("TimeControl", game.gameConfig().timeControl().toPgn()));
+            if (game.gameConfig().fen() != null) {
+                lines.add(tag("FEN", game.gameConfig().fen()));
+            }
             lines.add("");
 
             lines.addAll(PgnUtils.formatMoveText(game.moves().toSanArray(), game.extraMoves()));

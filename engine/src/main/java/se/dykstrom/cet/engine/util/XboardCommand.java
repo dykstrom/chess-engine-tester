@@ -34,6 +34,7 @@ public enum XboardCommand {
     REJECTED("rejected"),
     REMOVE("remove"),
     RESULT("result"),
+    SETBOARD("setboard"),
     TIME("time"),
     USERMOVE("usermove"),
     XBOARD("xboard");

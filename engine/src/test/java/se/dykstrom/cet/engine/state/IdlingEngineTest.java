@@ -28,19 +28,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 import static se.dykstrom.cet.engine.util.XboardCommand.COMPUTER;
 import static se.dykstrom.cet.engine.util.XboardCommand.FORCE;
 import static se.dykstrom.cet.engine.util.XboardCommand.LEVEL;
 import static se.dykstrom.cet.engine.util.XboardCommand.NAME;
 import static se.dykstrom.cet.engine.util.XboardCommand.NEW;
 import static se.dykstrom.cet.engine.util.XboardCommand.QUIT;
+import static se.dykstrom.cet.engine.util.XboardCommand.SETBOARD;
 
 class IdlingEngineTest {
 
     private static final EngineConfig CONFIG = new EngineConfig(17, "engine.sh", null);
     private static final String MY_NAME = "my name";
     private static final String OPPONENT = "name of opponent";
+    private static final String FEN = "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
     private static final EngineFeatures FEATURES = EngineFeatures.builder().myName(MY_NAME).name("1").build();
+    private static final EngineFeatures FEATURES_SETBOARD = EngineFeatures.builder().myName(MY_NAME).name("1").setboard("1").build();
     private static final TimeControl TIME_CONTROL = new ClassicTimeControl(40,5, 10);
 
     private final EngineProcess unloadedProcessMock = mock(EngineProcess.class);
@@ -67,6 +71,39 @@ class IdlingEngineTest {
         verify(loadedProcessMock).sendCommand(COMPUTER);
         verify(loadedProcessMock).sendCommand(NAME, OPPONENT);
         verify(loadedProcessMock).sendCommand(LEVEL, 40, "5:10", 0);
+    }
+
+    @Test
+    void shouldStartEngineWithFen() {
+        // Given
+        final var idlingEngine = new IdlingEngine(CONFIG, FEATURES_SETBOARD, loadedProcessMock);
+        when(gameConfigMock.timeControl()).thenReturn(TIME_CONTROL);
+        when(gameConfigMock.white()).thenReturn(OPPONENT);
+        when(gameConfigMock.black()).thenReturn(MY_NAME);
+        when(gameConfigMock.fen()).thenReturn(FEN);
+
+        // When
+        idlingEngine.start(gameConfigMock);
+
+        // Then
+        verify(loadedProcessMock).sendCommand(NEW);
+        verify(loadedProcessMock).sendCommand(SETBOARD, FEN);
+    }
+
+    @Test
+    void shouldStartEngineWithoutFen() {
+        // Given
+        final var idlingEngine = new IdlingEngine(CONFIG, FEATURES, loadedProcessMock);
+        when(gameConfigMock.timeControl()).thenReturn(TIME_CONTROL);
+        when(gameConfigMock.white()).thenReturn(OPPONENT);
+        when(gameConfigMock.black()).thenReturn(MY_NAME);
+        when(gameConfigMock.fen()).thenReturn(null);
+
+        // When
+        idlingEngine.start(gameConfigMock);
+
+        // Then
+        verify(loadedProcessMock, never()).sendCommand(SETBOARD, FEN);
     }
 
     @Test

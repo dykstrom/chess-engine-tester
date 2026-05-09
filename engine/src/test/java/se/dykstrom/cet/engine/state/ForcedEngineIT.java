@@ -31,8 +31,7 @@ import se.dykstrom.cet.engine.time.ClassicTimeControl;
 import se.dykstrom.cet.engine.time.TimeControl;
 import se.dykstrom.cet.engine.util.EngineProcessImpl;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static se.dykstrom.cet.engine.util.TestConfig.ENGINE_1_COMMAND_LINUX;
 import static se.dykstrom.cet.engine.util.TestConfig.ENGINE_1_COMMAND_WINDOWS;
 import static se.dykstrom.cet.engine.util.TestConfig.ENGINE_1_DIRECTORY;
@@ -62,7 +61,7 @@ class ForcedEngineIT {
             forcedEngine.clear();
             forcedEngine.makeMove("e2e8");
             final UnexpectedException exception = assertThrows(UnexpectedException.class, forcedEngine::go);
-            assertTrue(exception.response() instanceof IllegalMove);
+            assertInstanceOf(IllegalMove.class, exception.response());
         });
     }
 

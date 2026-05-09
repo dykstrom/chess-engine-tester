@@ -47,9 +47,16 @@ class MatchServiceImplTest {
     private static final EngineFeatures FEATURE_CONFIG_ENGINE_2_REUSE_YES = EngineFeatures.builder().myName(ENGINE_2_NAME).reuse("1").build();
     private static final EngineFeatures FEATURE_CONFIG_ENGINE_1_REUSE_NO = EngineFeatures.builder().myName(ENGINE_1_NAME).reuse("0").build();
     private static final EngineFeatures FEATURE_CONFIG_ENGINE_2_REUSE_NO = EngineFeatures.builder().myName(ENGINE_2_NAME).reuse("0").build();
+    private static final EngineFeatures FEATURE_CONFIG_ENGINE_1_SETBOARD_YES = EngineFeatures.builder().myName(ENGINE_1_NAME).setboard("1").build();
+    private static final EngineFeatures FEATURE_CONFIG_ENGINE_2_SETBOARD_YES = EngineFeatures.builder().myName(ENGINE_2_NAME).setboard("1").build();
+    private static final String FEN_FRENCH_DEFENSE = "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2";
+
     private static final GameConfig GAME_CONFIG_ENGINE_1_IS_WHITE = new GameConfig(ENGINE_1_NAME, ENGINE_2_NAME, TIME_CONTROL);
     private static final GameConfig GAME_CONFIG_ENGINE_1_IS_BLACK = new GameConfig(ENGINE_2_NAME, ENGINE_1_NAME, TIME_CONTROL);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_ENGINE_1_IS_WHITE = new GameConfig(ENGINE_1_NAME, ENGINE_2_NAME, TIME_CONTROL, FEN_FRENCH_DEFENSE);
+    private static final GameConfig GAME_CONFIG_WITH_FEN_ENGINE_1_IS_BLACK = new GameConfig(ENGINE_2_NAME, ENGINE_1_NAME, TIME_CONTROL, FEN_FRENCH_DEFENSE);
     private static final MatchConfig MATCH_CONFIG = new MatchConfig(2, TIME_CONTROL);
+    private static final MatchConfig MATCH_CONFIG_WITH_FEN = new MatchConfig(2, TIME_CONTROL, FEN_FRENCH_DEFENSE);
 
     private final GameService gameServiceMock = mock(GameService.class);
     private final IdlingEngine initialIdlingEngine1Mock = mock(IdlingEngine.class);
@@ -76,7 +83,7 @@ class MatchServiceImplTest {
                 .thenReturn(gamePlayedWithEngine1AsWhite);
 
         // When
-        final var playedMatch = matchService.playSingleGameMatch(TIME_CONTROL, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
+        final var playedMatch = matchService.playSingleGameMatch(TIME_CONTROL, null, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
 
         // Then
         assertEquals(List.of(WHITE_WON), playedMatch.results());
@@ -94,7 +101,8 @@ class MatchServiceImplTest {
                 .thenReturn(gamePlayedWithEngine1AsWhite);
 
         // When
-        final var playedMatch = matchService.playSingleGameMatchWithExtraEngine(TIME_CONTROL, initialIdlingEngine1Mock, initialIdlingEngine2Mock, initialIdlingEngine3Mock);
+        final var playedMatch = matchService.playSingleGameMatchWithExtraEngine(TIME_CONTROL, null,
+                initialIdlingEngine1Mock, initialIdlingEngine2Mock, initialIdlingEngine3Mock);
 
         // Then
         assertEquals(List.of(WHITE_WON), playedMatch.results());
@@ -116,7 +124,7 @@ class MatchServiceImplTest {
         final var matchCount = new AtomicInteger(0);
 
         // When
-        matchService.addGameListener((gameNumber, startTime, playedGame) -> matchCount.incrementAndGet());
+        matchService.addGameListener((_, _, _) -> matchCount.incrementAndGet());
         final var playedMatch = matchService.playMatch(MATCH_CONFIG, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
 
         // Then
@@ -124,6 +132,36 @@ class MatchServiceImplTest {
         assertEquals(initialIdlingEngine1Mock, playedMatch.engine1());
         assertEquals(initialIdlingEngine2Mock, playedMatch.engine2());
         assertEquals(2, matchCount.get());
+    }
+
+    @Test
+    void shouldPlayMatchWithFen() {
+        // Given
+        when(initialIdlingEngine1Mock.myName()).thenReturn(ENGINE_1_NAME);
+        when(initialIdlingEngine2Mock.myName()).thenReturn(ENGINE_2_NAME);
+        when(initialIdlingEngine1Mock.features()).thenReturn(FEATURE_CONFIG_ENGINE_1_SETBOARD_YES);
+        when(initialIdlingEngine2Mock.features()).thenReturn(FEATURE_CONFIG_ENGINE_2_SETBOARD_YES);
+
+        final var gameWithFenEngine1AsWhite = new PlayedGame(
+                GAME_CONFIG_WITH_FEN_ENGINE_1_IS_WHITE, initialIdlingEngine1Mock, initialIdlingEngine2Mock,
+                null, WHITE_WON, "Checkmate", new MoveList(), null);
+        final var gameWithFenEngine1AsBlack = new PlayedGame(
+                GAME_CONFIG_WITH_FEN_ENGINE_1_IS_BLACK, initialIdlingEngine2Mock, initialIdlingEngine1Mock,
+                null, DRAW, "Stalemate", new MoveList(), null);
+
+        when(gameServiceMock.playGame(GAME_CONFIG_WITH_FEN_ENGINE_1_IS_WHITE, initialIdlingEngine1Mock, initialIdlingEngine2Mock))
+                .thenReturn(gameWithFenEngine1AsWhite);
+        when(gameServiceMock.playGame(GAME_CONFIG_WITH_FEN_ENGINE_1_IS_BLACK, initialIdlingEngine2Mock, initialIdlingEngine1Mock))
+                .thenReturn(gameWithFenEngine1AsBlack);
+
+        // When
+        final var playedMatch = matchService.playMatch(MATCH_CONFIG_WITH_FEN, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
+
+        // Then
+        assertEquals(List.of(WHITE_WON, DRAW), playedMatch.results());
+        assertEquals(initialIdlingEngine1Mock, playedMatch.engine1());
+        assertEquals(initialIdlingEngine2Mock, playedMatch.engine2());
+        assertEquals(FEN_FRENCH_DEFENSE, playedMatch.matchConfig().fen());
     }
 
     @Test
@@ -152,7 +190,7 @@ class MatchServiceImplTest {
         final var matchCount = new AtomicInteger(0);
 
         // When
-        matchService.addGameListener((gameNumber, startTime, playedGame) -> matchCount.incrementAndGet());
+        matchService.addGameListener((_, _, _) -> matchCount.incrementAndGet());
         final var playedMatch = matchService.playMatch(MATCH_CONFIG, initialIdlingEngine1Mock, initialIdlingEngine2Mock);
 
         // Then

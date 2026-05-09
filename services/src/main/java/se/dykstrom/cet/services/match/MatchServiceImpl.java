@@ -59,13 +59,13 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public PlayedMatch playSingleGameMatch(final TimeControl timeControl,
+                                           final String fen,
                                            final IdlingEngine engine1,
                                            final IdlingEngine engine2) {
-        LOGGER.log(INFO, "Starting new match of 1 game(s) between ''{0}'' and ''{1}''. Time control is {2}.",
-                engine1.myName(), engine2.myName(), timeControl);
+        logStartOfMatch(1, engine1, engine2, null, timeControl, fen);
         playing.set(true);
 
-        final var gameConfig = new GameConfig(engine1.myName(), engine2.myName(), timeControl);
+        final var gameConfig = new GameConfig(engine1.myName(), engine2.myName(), timeControl, fen);
         final var startTime = LocalDateTime.now();
         final var playedGame = gameService.playGame(gameConfig, engine1, engine2);
         notifyListeners(1, startTime, playedGame);
@@ -74,7 +74,7 @@ public class MatchServiceImpl implements MatchService {
         final var reasons = List.of(playedGame.reason());
         LOGGER.log(INFO, "Final results: {0}", results);
         return new PlayedMatch(
-                new MatchConfig(1, timeControl),
+                new MatchConfig(1, timeControl, fen),
                 playedGame.whiteEngine(),
                 playedGame.blackEngine(),
                 null,
@@ -85,15 +85,15 @@ public class MatchServiceImpl implements MatchService {
 
     @Override
     public PlayedMatch playSingleGameMatchWithExtraEngine(final TimeControl timeControl,
+                                                          final String fen,
                                                           final IdlingEngine engine1,
                                                           final IdlingEngine engine2,
                                                           final IdlingEngine engine3) {
-        LOGGER.log(INFO, "Starting new match of 1 game(s) between ''{0}'' and ''{1}''. " +
-                         "Using ''{2}'' as extra engine. Time control is {3}.",
-                engine1.myName(), engine2.myName(), engine3.myName(), timeControl);
+        ensure(engine3 != null, "engine3 cannot be null");
+        logStartOfMatch(1, engine1, engine2, engine3, timeControl, fen);
         playing.set(true);
 
-        final var gameConfig = new GameConfig(engine1.myName(), engine2.myName(), timeControl);
+        final var gameConfig = new GameConfig(engine1.myName(), engine2.myName(), timeControl, fen);
         final var startTime = LocalDateTime.now();
         final var playedGame = gameService.playGameWithExtraEngine(gameConfig, engine1, engine2, engine3);
         notifyListeners(1, startTime, playedGame);
@@ -102,7 +102,7 @@ public class MatchServiceImpl implements MatchService {
         final var reasons = List.of(playedGame.reason());
         LOGGER.log(INFO, "Final results: {0}", results);
         return new PlayedMatch(
-                new MatchConfig(1, timeControl),
+                new MatchConfig(1, timeControl, fen),
                 playedGame.whiteEngine(),
                 playedGame.blackEngine(),
                 playedGame.extraEngine(),
@@ -116,8 +116,7 @@ public class MatchServiceImpl implements MatchService {
                                  final IdlingEngine engine1,
                                  final IdlingEngine engine2) {
         ensure(matchConfig.numberOfGames() % 2 == 0, "numberOfGames must be even");
-        LOGGER.log(INFO, "Starting new match of {0} game(s) between ''{1}'' and ''{2}''. Time control is {3}.",
-                matchConfig.numberOfGames(), engine1.myName(), engine2.myName(), matchConfig.timeControl());
+        logStartOfMatch(matchConfig.numberOfGames(), engine1, engine2, null, matchConfig.timeControl(), matchConfig.fen());
         playing.set(true);
         final List<GameResult> results = new ArrayList<>();
         final List<String> reasons = new ArrayList<>();
@@ -127,7 +126,7 @@ public class MatchServiceImpl implements MatchService {
         var round = 1;
         while (playing.get() && round <= matchConfig.numberOfGames()) {
             // Odd game
-            var gameConfig = new GameConfig(idlingEngine1.myName(), idlingEngine2.myName(), matchConfig.timeControl());
+            var gameConfig = new GameConfig(idlingEngine1.myName(), idlingEngine2.myName(), matchConfig.timeControl(), matchConfig.fen());
             var startTime = LocalDateTime.now();
             var playedGame = gameService.playGame(gameConfig, idlingEngine1, idlingEngine2);
             notifyListeners(round, startTime, playedGame);
@@ -139,7 +138,7 @@ public class MatchServiceImpl implements MatchService {
             ThreadUtils.sleepSilently(1_000);
 
             // Even game
-            gameConfig = new GameConfig(idlingEngine2.myName(), idlingEngine1.myName(), matchConfig.timeControl());
+            gameConfig = new GameConfig(idlingEngine2.myName(), idlingEngine1.myName(), matchConfig.timeControl(), matchConfig.fen());
             startTime = LocalDateTime.now();
             playedGame = gameService.playGame(gameConfig, idlingEngine2, idlingEngine1);
             notifyListeners(round, startTime, playedGame);
@@ -155,6 +154,25 @@ public class MatchServiceImpl implements MatchService {
         return new PlayedMatch(matchConfig, idlingEngine1, idlingEngine2, null, results, reasons);
     }
 
+    private static void logStartOfMatch(final int numberOfGames,
+                                        final IdlingEngine engine1,
+                                        final IdlingEngine engine2,
+                                        final IdlingEngine engine3,
+                                        final TimeControl timeControl,
+                                        final String fen) {
+        final var builder = new StringBuilder();
+        builder.append("Starting new match of ").append(numberOfGames).append(" game(s) ");
+        builder.append("between '").append(engine1.myName()).append("' and '").append(engine2.myName()).append("'. ");
+        if (engine3 != null) {
+            builder.append("Using '").append(engine3.myName()).append("' as extra engine. ");
+        }
+        builder.append("Time control is ").append(timeControl).append(". ");
+        if (fen != null) {
+            builder.append("Starting position is '").append(fen).append("'. ");
+        }
+        LOGGER.log(INFO, builder.toString());
+    }
+
     /**
      * Restarts the engine process if reuse is disabled in the engine features.
      * If reuse is enabled, this method just returns the given idling engine.
@@ -165,12 +183,6 @@ public class MatchServiceImpl implements MatchService {
         }
 
         return idlingEngine.unload().load();
-    }
-
-    @Override
-    public void stopMatch() {
-        gameService.stopGame();
-        playing.set(false);
     }
 
     private void notifyListeners(final int round, final LocalDateTime startTime, final PlayedGame playedGame) {

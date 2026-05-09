@@ -3,7 +3,6 @@
 <div style="text-align: left">
 
 [![Build](https://github.com/dykstrom/chess-engine-tester/actions/workflows/build.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/build.yml)
-[![Release](https://github.com/dykstrom/chess-engine-tester/actions/workflows/release.yml/badge.svg)](https://github.com/dykstrom/chess-engine-tester/actions/workflows/release.yml)
 [![Open Issues](https://img.shields.io/github/issues/dykstrom/chess-engine-tester)](https://github.com/dykstrom/chess-engine-tester/issues)
 [![Latest Release](https://img.shields.io/github/v/release/dykstrom/chess-engine-tester?display_name=release)](https://github.com/dykstrom/chess-engine-tester/releases)
 ![Downloads](https://img.shields.io/github/downloads/dykstrom/chess-engine-tester/total)
@@ -49,8 +48,8 @@ $ cet --help
 It will print something like this:
 
 ```
-Usage: cet [-hV] -1=FILENAME -2=FILENAME [-3=FILENAME] -n=NUMBER [-o=FILENAME]
-           -t=TIME CONTROL
+Usage: cet [-hV] -1=FILENAME -2=FILENAME [-3=FILENAME] [-f=FEN] -n=NUMBER
+           [-o=FILENAME] -t=TIME CONTROL
 Tests chess engines by letting them play each other.
   -1, --engine1=FILENAME    Chess engine 1 config FILENAME.
   -2, --engine2=FILENAME    Chess engine 2 config FILENAME.
@@ -59,6 +58,8 @@ Tests chess engines by letting them play each other.
                               will think about the same moves as the black
                               engine, but its counter moves will only be
                               logged, and not played.
+  -f, --fen=FEN             Starting position in FEN format. Defaults to
+                              standard starting position.
   -h, --help                Show this help message and exit.
   -n, --number=NUMBER       Number of games to play. Either 1 or a positive,
                               even number.
@@ -88,6 +89,16 @@ $ cet -n 4 -t 40/300 -1 conf/engine1.json -2 conf/engine2.json
 
 Optionally, you can specify an output file (-o) where finished games will be stored, and the
 configuration of a third chess engine (-3), see below.
+
+You can also specify a custom starting position (-f) using 
+[FEN format](https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation). Both engines 
+must support the XBoard `setboard` command to use this feature. The starting position will be 
+included in the PGN output as a `FEN` tag. The example below starts all games from the position
+after 1. e4 e6:
+
+```shell
+$ cet -n 4 -t 40/300 -f "rnbqkbnr/pppp1ppp/4p3/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2" -1 conf/engine1.json -2 conf/engine2.json
+```
 
 
 ### Config File Format

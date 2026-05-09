@@ -50,9 +50,12 @@ class ConfiguredEngineTest {
     private static final String FEATURE_USER_MOVE = "feature usermove=1";
     private static final String FEATURE_MULTI = "feature myname=\"foo\" usermove=1 done=1";
 
+    private static final String FEATURE_SET_BOARD = "feature setboard=1";
+
     private static final List<String> FEATURE_RESPONSE_NORMAL = List.of(FEATURE_MY_NAME_FOO, FEATURE_USER_MOVE, FEATURE_DONE_1);
     private static final List<String> FEATURE_RESPONSE_DELAYED = List.of(FEATURE_DONE_0, FEATURE_MY_NAME_BAR, FEATURE_USER_MOVE, FEATURE_DONE_1);
     private static final List<String> FEATURE_RESPONSE_MULTI = List.of(FEATURE_MULTI);
+    private static final List<String> FEATURE_RESPONSE_SET_BOARD = List.of(FEATURE_MY_NAME_FOO, FEATURE_SET_BOARD, FEATURE_DONE_1);
 
     private final EngineProcess unloadedProcessMock = mock(EngineProcess.class);
     private final EngineProcess loadedProcessMock = mock(EngineProcess.class);
@@ -95,6 +98,22 @@ class ConfiguredEngineTest {
         verify(loadedProcessMock).sendCommand(ACCEPTED, "done");
         verify(loadedProcessMock).sendCommand(ACCEPTED, "myname");
         verify(loadedProcessMock).sendCommand(ACCEPTED, "usermove");
+    }
+
+    @Test
+    void shouldLoadEngineWithSetboardFeature() {
+        // Given
+        final var configuredEngine = new ConfiguredEngine(CONFIG, unloadedProcessMock);
+        when(unloadedProcessMock.startUp(ID, OS_COMMAND, DIRECTORY)).thenReturn(loadedProcessMock);
+        when(loadedProcessMock.readUntil(DONE_REGEX)).thenReturn(FEATURE_RESPONSE_SET_BOARD);
+
+        // When
+        final IdlingEngine idlingEngine = configuredEngine.load();
+
+        // Then
+        final var expectedFeatures = EngineFeatures.builder().myName("foo").setboard("1").build();
+        assertEquals(expectedFeatures, idlingEngine.features());
+        verify(loadedProcessMock).sendCommand(ACCEPTED, "setboard");
     }
 
     @Test

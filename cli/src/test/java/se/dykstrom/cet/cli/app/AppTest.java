@@ -156,6 +156,26 @@ class AppTest {
     }
 
     @Test
+    void shouldNotAllowInvalidFen() {
+        // Given
+        final String[] args = {
+                "-n", "1",
+                "-t", "40/60",
+                "-f", "this is not a valid FEN",
+                "-1", "foo.json",
+                "-2", "bar.json"
+        };
+
+        // When
+        final var exitCode = commandLine.execute(args);
+
+        // Then
+        assertEquals(CommandLine.ExitCode.USAGE, exitCode);
+        assertTrue(stdout.toString().isBlank());
+        assertTrue(stderr.toString().contains("Invalid FEN position"));
+    }
+
+    @Test
     void shouldPlaySingleGameMatch() throws Exception {
         // Given
         final String[] args = {
@@ -177,7 +197,7 @@ class AppTest {
         when(fileServiceMock.canRead(FILE_BAR)).thenReturn(true);
         when(engineServiceMock.load(FILE_FOO)).thenReturn(idlingEngine1Mock);
         when(engineServiceMock.load(FILE_BAR)).thenReturn(idlingEngine2Mock);
-        when(matchServiceMock.playSingleGameMatch(any(), any(), any())).thenReturn(playedMatch);
+        when(matchServiceMock.playSingleGameMatch(any(), any(), any(), any())).thenReturn(playedMatch);
         when(idlingEngine1Mock.myName()).thenReturn("foo");
         when(idlingEngine2Mock.myName()).thenReturn("bar");
 
@@ -197,7 +217,7 @@ class AppTest {
         verify(engineServiceMock, times(2)).load(any());
         verify(matchServiceMock).addGameListener(any(ProgressBarWriter.class));
         verify(matchServiceMock).addGameListener(any(PgnFileWriter.class));
-        verify(matchServiceMock).playSingleGameMatch(any(), any(), any());
+        verify(matchServiceMock).playSingleGameMatch(any(), any(), any(), any());
     }
 
     @Test
@@ -225,7 +245,7 @@ class AppTest {
         when(engineServiceMock.load(FILE_FOO)).thenReturn(idlingEngine1Mock);
         when(engineServiceMock.load(FILE_BAR)).thenReturn(idlingEngine2Mock);
         when(engineServiceMock.load(FILE_TEE)).thenReturn(idlingEngine3Mock);
-        when(matchServiceMock.playSingleGameMatchWithExtraEngine(any(), any(), any(), any())).thenReturn(playedMatch);
+        when(matchServiceMock.playSingleGameMatchWithExtraEngine(any(), any(), any(), any(), any())).thenReturn(playedMatch);
         when(idlingEngine1Mock.myName()).thenReturn("foo");
         when(idlingEngine2Mock.myName()).thenReturn("bar");
         when(idlingEngine3Mock.myName()).thenReturn("tee");
@@ -247,7 +267,7 @@ class AppTest {
         verify(engineServiceMock, times(3)).load(any());
         verify(matchServiceMock).addGameListener(any(ProgressBarWriter.class));
         verify(matchServiceMock).addGameListener(any(PgnFileWriter.class));
-        verify(matchServiceMock).playSingleGameMatchWithExtraEngine(any(), any(), any(), any());
+        verify(matchServiceMock).playSingleGameMatchWithExtraEngine(any(), any(), any(), any(), any());
     }
 
     @Test
