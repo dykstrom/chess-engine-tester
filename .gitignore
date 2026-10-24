@@ -17,7 +17,7 @@ buildNumber.properties
 
 *.log
 
-engines/
+/engines
 *.pgn
 *.json
 !gnuchess.json
